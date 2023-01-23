@@ -1,0 +1,18 @@
+
+
+.button {
+    -fx-background-color: linear-gradient(to bottom, #BFA9926D, #BFA992AD,#BFA9926D);
+    -fx-background-radius: 8px;
+    -fx-margin: 10px;
+    -fx-border: 5px;
+    -fx-border-color: #AAAFFF;
+}
+
+.button:hover {
+    -fx-background-color: #c5d7da;
+}
+
+.button:active {
+    -fx-background-color: #b8c7ca;
+}
+
