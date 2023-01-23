@@ -1,8 +1,6 @@
-# READ ME!!
-To Dr. Kahle,
-
-For the rough draft for this project, the **runner file for the console-based version of this project is... a little buried.** (sorry!)
-
+# Gambler's Delight (GDJFX)
+![casino](https://user-images.githubusercontent.com/79682953/214141005-cf24c024-4be7-4759-9161-91269e993b71.jpg)
+_Lean green gambling machine running on the power of coffee beans and JavaFX._
 <br><br>
-_<h3>Here's where you can find the runner file:</h3>_
-* src/com.gdjfx/console/ProgramConsole.java
+#
+> Execute program (app or CLI) at com.gdjfx/app/ProgramApplet or com.gdjfx/cli/ProgramConsole.
