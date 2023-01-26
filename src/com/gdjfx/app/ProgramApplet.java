@@ -1,3 +1,5 @@
+// Lucas Xie - P5 AP CSA - 1/26/23 - GDJFX
+
 package com.gdjfx.app;
 
 import eu.iamgio.animated.Animated;
@@ -142,7 +144,7 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
 
         scene = new Scene(root /*new GdSlowScene().initializeRoot()*/, 1024, 768);
         scene.getStylesheets().add("com/gdjfx/app/main.css");
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
             public void handle(KeyEvent ke) {
                 if (ke.getCode() == KeyCode.UP) {
                     activeBtnIndex = (activeBtnIndex + 1 > 1) ? 0 : activeBtnIndex + 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
