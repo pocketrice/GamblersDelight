@@ -45,8 +45,10 @@ public class GdSlowScene extends GdSlowConsole {
     Group ynPrompt, betPrompt, promptBox;
     Set<Node> roundAssets = new HashSet<>();
     TextFlow outputText;
-    boolean isPaused = false;
+    boolean isPaused = false, isAttemptingQuadRound = false;
 
+
+    // Credit to https://stackoverflow.com/questions/46369046/how-to-wait-for-user-input-on-javafx-application-thread-without-using-showandwai
     private final Object PAUSE_KEY = new Object();
 
     private void pause() {
@@ -56,10 +58,13 @@ public class GdSlowScene extends GdSlowConsole {
     private void resume() {
         Platform.exitNestedEventLoop(PAUSE_KEY, null);
     }
+
+    // End of credit
+
+
     private final int TOTAL_ROUNDS = 10;
     private int tensValueBet = 1, onesValueBet = 0;
 
-    private boolean isAttemptingQuadRound = false;
     private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
     private long balance, netBalance, bet;
     private double totalWinRate, doubleWinRate, quadWinRate, totalWinLoseRatio, expectedValue;
@@ -85,6 +90,9 @@ public class GdSlowScene extends GdSlowConsole {
         netBalance = 0;
     }
 
+    // Load color presets into designated map.
+    // @param N/A
+    // @return N/A
     public void loadColorPresets() {
         GD_PRESETS.put("GD_BLUE", GD_BLUE);
         GD_PRESETS.put("GD_DEW", GD_DEW);
@@ -97,6 +105,10 @@ public class GdSlowScene extends GdSlowConsole {
         GD_PRESETS.put("GD_YELLOW", GD_YELLOW);
     }
 
+    // Toggles the obfuscation panel (dark overlay for pause screen, startup, etc). Necessary as it is difficult to both animate opacity and hide object's visibility without many lines.
+    // @param obfPanel - obfuscation panel
+    // @param isVisible - whether to show or hide the panel
+    // @return N/A
     public void toggleObfPanel(Rectangle obfPanel, boolean isVisible) {
         Animated<Double> obfAnimator = new Animated<>(obfPanel, PropertyWrapper.of(obfPanel.opacityProperty())).custom(settings -> settings.withDuration(Duration.seconds(4)));
         root.getChildren().add(obfAnimator);
@@ -119,6 +131,10 @@ public class GdSlowScene extends GdSlowConsole {
         }
     }
 
+
+    // Initialize the root pane.
+    // @param N/A
+    // @return N/A
     public void initializeRoot() throws FileNotFoundException, InterruptedException {
         loadColorPresets();
 
@@ -343,6 +359,11 @@ public class GdSlowScene extends GdSlowConsole {
         root.getChildren().add(btnStart);
     }
 
+
+    // Update UI textflow with given strings (JFX UI equivalent of System.out.print).
+    // @param textflow - target textflow
+    // @param addendums - strings to append (separated as each string only supports one color b/c they are parsed as Text objects)
+    // @return N/A
     public void updateOutputText (TextFlow textflow, String... addendums) {
         // An addendum string can be parsed to have colors. This is done by typing {CONST_NAME} or {any hex color} prior to any text.
         for (String addendum : addendums) {
@@ -365,6 +386,10 @@ public class GdSlowScene extends GdSlowConsole {
         }
     }
 
+    // Compare a string against several patterns and return true only if all patterns match (strict matching).
+    // @param string
+    // @param patterns - regex patterns to test
+    // @return whether or not string matched ALL patterns
     public static boolean bulkContains(String string, Pattern... patterns) { // <+> APM - too lazy to write one for just one pattern, so here ya go
         for (Pattern pattern : patterns) {
             Matcher matcher = pattern.matcher(string);
@@ -377,6 +402,9 @@ public class GdSlowScene extends GdSlowConsole {
         return true; // All patterns were matched.
     }
 
+    // Specific animation for prompt info bar's two "attention-directing" arrows; downward-pointing gesture. Inspired by Ace Attorney.
+    // @param promptBarArrow - target arrow
+    // @return N/A
     public static void playPromptBarArrowAnim(FontIcon promptBarArrow) {
         Timeline promptBarArrowAnim = new Timeline(
                 new KeyFrame(Duration.ZERO, e -> promptBarArrow.setLayoutY(313.2)),
@@ -391,6 +419,10 @@ public class GdSlowScene extends GdSlowConsole {
         promptBarArrowAnim.play();
     }
 
+    // Non-generic prompting method to ask the user if they want to risk the quad round.
+    // @param balance
+    // @param bet
+    // @return whether or not user chose to try the quad round
     public boolean ynPrompt (double balance, double bet) {
         updateOutputText(outputText, "{GD_YELLOW}* You currently qualify for a 2x win ", "(" + gdMonetaryParse(balance, false, false, false) + " -> " + gdMonetaryParse((balance + bet * 2), false, false, false) + ")", "{GD_YELLOW}.\nTry for a 4x win by trying to roll a pair ", "(" + gdMonetaryParse(balance, false, false, false) + " -> " + gdMonetaryParse((balance + bet * 4), false, false, false) + ")", "{GD_YELLOW}? \nYou will lose ALL profits if you lose.\n\n");
         ynPrompt.setVisible(true);
@@ -402,6 +434,9 @@ public class GdSlowScene extends GdSlowConsole {
         return isAttemptingQuadRound;
     }
 
+    // Non-generic prompting method to ask the user for a bet to deposit ($10-$50, increments of 10)
+    // @param message - message to push to textflow
+    // @return bet amount
     public long betPrompt (String message) {
         updateOutputText(outputText, message);
         betPrompt.setVisible(true);
@@ -413,6 +448,13 @@ public class GdSlowScene extends GdSlowConsole {
         return tensValueBet * 10L;
     }
 
+
+    // JFX / Gambler's Delight-specific monetaryParse method that uses color presets in place of ansi colors (which don't work in GUI).
+    // @param num
+    // @param includeDecimal
+    // @param includeExplicitSign
+    // @param includeCOlor
+    // @return monetary-parsed string
     public static String gdMonetaryParse(double num, boolean includeDecimal, boolean includeExplicitSign, boolean includeColor) { // BUG: for some reason this doesn't work 100% (see 'expected value' on occassions)
         String[] monetaryColors = (includeColor) ? new String[]{"{GD_DEW}", "{GD_BLUE}", "{GD_CRIMSON}"} : new String[]{"","",""};
 
@@ -433,6 +475,10 @@ public class GdSlowScene extends GdSlowConsole {
         }
     }
 
+    // JFX / Gambler's Delight-specific fancyDelay method using Ikonli icons in place of chars and \b (which was a little too funky for GUI)
+    // @param output - target textflow
+    // @param loadMessage
+    // @return N/A
     public void gdFancyDelay(TextFlow output, String loadMessage) { // assumes that method is ONLY used for actions needing user input (e.g. roll dice) and then stop.
         int recursionCount = 0;
         Text message = new Text(loadMessage + " ");
@@ -475,6 +521,12 @@ public class GdSlowScene extends GdSlowConsole {
         else updateOutputText(output, "\n");*/
     }
 
+    // Create and display a visual representation of a generated dice roll. Final positions are slightly randomized and rotation/position has attached transitions.
+    // @param diceA
+    // @param diceB
+    // @param root - root pane
+    // @param roundAssets - any assets (only visualized dice and cards) used within one single round. This grouping is used later.
+    // @return N/A
     public void visualizeDice(Dice diceA, Dice diceB, Pane root, Set<Node> roundAssets) throws FileNotFoundException {
         Image imgDiceI = retrieveImage("src/com/gdjfx/app/assets/dicei.png");
         Image imgDiceII = retrieveImage("src/com/gdjfx/app/assets/diceii.png");
@@ -521,11 +573,20 @@ public class GdSlowScene extends GdSlowConsole {
         visualizeDiceAnim.play();
     }
 
+    // Generate a random number anchored on a base value with customizable skews to either side.
+    // @param base - base value
+    // @param lowerOffset - lowest possible # (higher = more skew leftward)
+    // @param upperOffset - highest possible # (higher = more skew rightward)
+    // @return random number based on set specs
     public static double proximityRandom(double base, double lowerOffset, double upperOffset) { // <+> APM
         return Math.random()*(lowerOffset + upperOffset) + base - lowerOffset;
     }
 
-
+    // The card equivalent of visualizeDice.
+    // @param card
+    // @param root
+    // @param roundAssets
+    // @return N/A
     public void visualizeCard(Card card, Pane root, Set<Node> roundAssets) throws FileNotFoundException {
 
         Image cardCover = ((int)(Math.random()*2) == 0) ? retrieveImage("src/com/gdjfx/app/assets/redCardCover.png") : retrieveImage("src/com/gdjfx/app/assets/blueCardCover.png");
@@ -578,6 +639,9 @@ public class GdSlowScene extends GdSlowConsole {
         visualizeCardAnim.play();
     }
 
+    // Rolls first round of cycle. Overwritten to include steps for visualization.
+    // @param N/A
+    // @return N/A
     @Override
     public boolean rollInitRound() {
         // Roll 2x dice; move on if either is prime.
@@ -598,6 +662,9 @@ public class GdSlowScene extends GdSlowConsole {
         return (isPrime(diceA.selectedValue) || isPrime(diceB.selectedValue));
     }
 
+    // Rolls second round of cycle. Overwritten to include steps for visualization.
+    // @param N/A
+    // @return N/A
     @Override
     public boolean rollDoubleRound() {
         // Pick a card; move on if diamond, spade, or JQK of heart
@@ -614,6 +681,10 @@ public class GdSlowScene extends GdSlowConsole {
         return (card.cardSuit.equals(Card.Suit.DIAMOND) || card.cardSuit.equals(Card.Suit.SPADE) || (card.cardSuit.equals(Card.Suit.HEART) && card.cardRank.ordinal() > 9));
     }
 
+
+    // Rolls third round of cycle. Overwritten to include steps for visualization.
+    // @param N/A
+    // @return N/A
     @Override
     public boolean rollQuadRound() {
         // Roll 2x dice; win if both numbers are equal
@@ -637,7 +708,9 @@ public class GdSlowScene extends GdSlowConsole {
 
 
 
-
+    // Rolls a full cycle. Not many changes from console version apart from JFX-compatibility changes and some magic to allow JFX to wait for user input (otherwise it would compile the pane fully).
+    // @param N/A
+    // @return N/A
     public void rollCycle() throws InterruptedException {
 
         long initialBal = balance;
@@ -759,10 +832,10 @@ public class GdSlowScene extends GdSlowConsole {
             expectedValue = truncate((double) (netBalance - netBets) / currentRound, 2);
 
             // Takes into account div by zero problem
-            totalWinRate = (totalLosses != 0) ? (double) totalWins / currentRound : (double) totalWins;
+            totalWinRate = (currentRound != 0) ? (double) totalWins / currentRound : (double) totalWins;
             totalWinLoseRatio = (totalLosses != 0) ? (double) totalWins / totalLosses : 0;
-            doubleWinRate = (doubleLosses != 0) ? (double) doubleWins / currentRound : (double) doubleWins;
-            quadWinRate = (quadLosses != 0) ? (double) quadWins / currentRound : (double) quadWins;
+            doubleWinRate = (doubleLosses + doubleWins != 0) ? (double) doubleWins / (doubleWins + doubleLosses) : (double) doubleWins;
+            quadWinRate = (quadLosses + quadWins != 0) ? (double) quadWins / (quadWins + quadLosses) : (double) quadWins;
 
             // ROUND STATISTICS
             // BALANCE, NET BALANCE
@@ -776,12 +849,15 @@ public class GdSlowScene extends GdSlowConsole {
 
             updateOutputText(outputText, "\n> Win rate (total): " + totalWins + " / " + currentRound + " = " + truncate(totalWinRate * 100, 2) + "%\n");
             updateOutputText(outputText, "   W/L ratio (total): " + totalWins + " / " + totalLosses + " = " + truncate(totalWinLoseRatio, 2) + "\n");
-            updateOutputText(outputText, "   Win rate (2x stage): " + doubleWins + " / " + currentRound + " = " + truncate(doubleWinRate * 100, 2) + "%\n");
-            updateOutputText(outputText, "   Win rate (4x stage): " + quadWins + " / " + currentRound + " = " + truncate(quadWinRate * 100, 2) + "%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+            updateOutputText(outputText, "   Win rate (2x stage): " + doubleWins + " / " + (doubleWins + doubleLosses) + " = " + truncate(doubleWinRate * 100, 2) + "%\n");
+            updateOutputText(outputText, "   Win rate (4x stage): " + quadWins + " / " + (quadWins + quadLosses) + " = " + truncate(quadWinRate * 100, 2) + "%\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
             fxDelay(8000);
         }
     }
 
+    // JFX-specific delay (equivalent to Thread.sleep(ms)) by using some clever trickery.
+    // @param ms - milliseconds to wait
+    // @return N/A
     public void fxDelay(long ms) {
         Timeline fxDelayAnim = new Timeline(
                 new KeyFrame(Duration.millis(ms), e -> resume())
@@ -790,6 +866,10 @@ public class GdSlowScene extends GdSlowConsole {
         pause();
     }
 
+    // Adds a bulk amount of items to a collection without needing to package into a collection first.
+    // @param collection - any collection of objects of type E
+    // @param items - objects of type E
+    // @return N/A
     @SafeVarargs
     public static <T extends Collection<E>, E> void bulkAdd(T collection, E... items) { // <+> APM -- this may seem redundant (see List.addAll) but this might be useful when adding a bunch of individual items.
         collection.addAll(Arrays.asList(items));

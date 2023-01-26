@@ -22,10 +22,20 @@ public class Dice { // todo: might need to store position of dice (rotation, loc
         selectedValue = -1; // 2nd assertion guarantees no negatives; this allows for safely checking if selectedValue was not set yet.
     }
 
+    // Generate a theoretical dice roll value. This was intended to be paired with getPhysicalSelectedValue, where based on
+    // the highest side of the dice (determined by finding the highest point) a side was selected (which would not be perfectly equal randomness).
+    // @param N/A
+    // @return theoretical dice roll value
     public int getTheoreticalSelectedValue() { // Based on hard, cold equal probabilities.
         return weightedRandom(ArrayUtils.toObject(sideValues), new double[sideValues.length], true);
     }
 
+
+    // Randomly select a choice out of a given pool either equally or individually weighted.
+    // @param choices - generic array of objects
+    // @param weights - array of weights of equal length to choices corresponding to each index
+    // @param autoEqualize - should weights be overwritten with an array of equalized weights?
+    // @return randomly selected object from objects
     public static <T> T weightedRandom(T[] choices, double[] weights, boolean autoEqualize)
     {
         double rng = Math.random();
@@ -47,6 +57,9 @@ public class Dice { // todo: might need to store position of dice (rotation, loc
         return null;
     }
 
+    // Tracks and rolls the dice.
+    // @param N/A
+    // @return N/A
     public void roll() {
         selectedValue = getTheoreticalSelectedValue();
     }

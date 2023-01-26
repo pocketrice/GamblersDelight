@@ -45,6 +45,9 @@ public class GdSlowConsole {
         netBalance = 0;
     }
 
+    // Rolls a full cycle (1 trial).
+    // @param N/A
+    // @return N/A
     public void rollCycle() throws InterruptedException, FileNotFoundException {
         long initialBal = balance;
         long netBets = 0;
@@ -173,6 +176,9 @@ public class GdSlowConsole {
         }
     }
 
+    // Rolls the first round of the cycle (prime # test)
+    // @param N/A
+    // @return whether either dice rolls were prime
     public boolean rollInitRound() {
         // Roll 2x dice; move on if either is prime.
         Dice diceA = new Dice();
@@ -186,6 +192,9 @@ public class GdSlowConsole {
         return (isPrime(diceA.selectedValue) || isPrime(diceB.selectedValue));
     }
 
+    // Rolls the second round of the cycle (card draw)
+    // @param N/A
+    // @return whether the drawn card fits specified criteria
     public boolean rollDoubleRound() {
         // Pick a card; move on if diamond, spade, or JQK of heart
         Card card = new Card();
@@ -195,6 +204,9 @@ public class GdSlowConsole {
         return (card.cardSuit.equals(Suit.DIAMOND) || card.cardSuit.equals(Suit.SPADE) || (card.cardSuit.equals(Suit.HEART) && card.cardRank.ordinal() > 9));
     }
 
+    // Rolls the third round of the cycle (super snake eyes).
+    // @param N/A
+    // @return whether both dice had matching #s
     public boolean rollQuadRound() {
         // Roll 2x dice; win if both numbers are equal
         Dice diceA = new Dice();
@@ -209,6 +221,9 @@ public class GdSlowConsole {
     }
 
 
+    // Checks a number for primeness.
+    // @param num - number to be checked
+    // @return whether or not the number was prime
     public static boolean isPrime(int num) { // Prime if only divisible by itself and 1.
         for (int i = 2; i < num; i++) {
             if ((double)num / i == (double)(num / i)) // Produces an integer
@@ -217,6 +232,12 @@ public class GdSlowConsole {
         return true;
     }
 
+    // A purely aesthetic fancy spinning "progress indicator" for dramatic effect.
+    // @param delay - how long each interval waits
+    // @param loadMessage - message to display alongside indicator
+    // @param completionMessage - message to display after done
+    // @param iterations - how many times to spin
+    // @return N/A
     public static void fancyDelay(long delay, String loadMessage, String completionMessage, int iterations) throws InterruptedException { // Yoinked from SchudawgCannoneer
         int recursionCount = 0;
         System.out.print(loadMessage + " /");
@@ -236,6 +257,10 @@ public class GdSlowConsole {
         else System.out.println();
     }
 
+    // Converts a given string to either upper or lower camel case.
+    // @param string
+    // @param isUpperCamel - true for upper camel, false for lower camel.
+    // @return camel-cased string
     @NotNull
     public static String toCamelCase(String string, boolean isUpperCamel) {
         // Camel case: remove all spaces (parse char after space as capitalized).
@@ -249,12 +274,21 @@ public class GdSlowConsole {
 
         return cameledString.toString().replaceAll(" ", "");
     }
+
+    // Truncates a value to a specified mantissa length (# of decimal places).
+    // @param value - any double
+    // @param mantissaLength - non-negative integer
+    // @return a double truncated to a specified mantissa length
     public static double truncate(double value, int mantissaLength) // <+> APM
     {
         return BigDecimal.valueOf(value).setScale(mantissaLength, RoundingMode.HALF_EVEN).doubleValue();
     }
 
 
+    // Generates a string from a collection in a grammatical list.
+    // @param collection - any collection of objects
+    // @param conjunction - string to join the last two items
+    // @return grammatically accurate list
     @NotNull
     public static <T extends Collection<K>, K> String collectionToConjoinedString(T collection, String conjunction) { // Joins a collection of any object together by toString()ing each obj and connecting with a conjunction.
         StringBuilder conjoinedString = new StringBuilder();
@@ -267,6 +301,10 @@ public class GdSlowConsole {
         return conjoinedString.toString();
     }
 
+
+    // Gets the combined product of all numbers in the collection.
+    // @param collection - any collection of numbers
+    // @return product of all items
     public static <T extends Number> double getCollectionProduct(Collection<T> collection) {
         double product = 1.0;
 
@@ -277,6 +315,12 @@ public class GdSlowConsole {
         return product;
     }
 
+    // Generates a string with proper grammar for monetary values.
+    // @param num - raw monetary value
+    // @param includeDecimal - should two decimal places be forcibly attached?
+    // @param includeExplicitSign - should the sign of the value be explicitly added? (+ or -)
+    // @param includeColor - should a corresponding ansi color be attached to the string?
+    // @return monetary-parsed string
     public static String monetaryParse(double num, boolean includeDecimal, boolean includeExplicitSign, boolean includeColor) { // BUG: for some reason this doesn't work 100% (see 'expected value' on occassions)
         // TODO: refactor to be more readable / concise (StringBuilder?)
         String[] monetaryColors = (includeColor) ? new String[]{ANSI_GREEN, ANSI_BLUE, ANSI_RED} : new String[]{"","",""};
