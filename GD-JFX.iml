@@ -10,15 +10,22 @@
     <orderEntry type="library" name="lib" level="project" />
     <orderEntry type="library" name="jfxtras.jmetro" level="project" />
     <orderEntry type="library" name="controlsfx" level="project" />
-    <orderEntry type="library" name="kordamp.bootstrapfx.core" level="project" />
-    <orderEntry type="library" name="kordamp.ikonli.core" level="project" />
     <orderEntry type="library" name="dlsc.formsfx.core" level="project" />
     <orderEntry type="library" name="jfree.fxgraphics2d" level="project" />
-    <orderEntry type="library" name="github.almasb.fxgl" level="project" />
     <orderEntry type="library" name="javatuples" level="project" />
-    <orderEntry type="library" name="sta.soft.richtextfx" level="project" />
-    <orderEntry type="library" name="testfx.core" level="project" />
-    <orderEntry type="library" name="de.schlegel11.jfxanimation" level="project" />
     <orderEntry type="library" name="apache.commons.lang3" level="project" />
+    <orderEntry type="library" name="eu.iamgio.animated" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/annotations/23.0.0/annotations-23.0.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="kordamp.ikonli.javafx" level="project" />
+    <orderEntry type="library" name="kordamp.ikonli.materialdesign.pack" level="project" />
+    <orderEntry type="library" name="kordamp.ikonli.materialdesign2.pack" level="project" />
   </component>
 </module>
