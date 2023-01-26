@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import static com.gdjfx.Card.Suit;
 import static com.gdjfx.cli.ProgramConsole.prompt;
 
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class GdSlowConsole {
         netBalance = 0;
     }
 
-    public void rollCycle() throws InterruptedException {
+    public void rollCycle() throws InterruptedException, FileNotFoundException {
         long initialBal = balance;
         long netBets = 0;
         List<Double> outcomeChances = new ArrayList<>();
@@ -179,8 +180,8 @@ public class GdSlowConsole {
         diceA.roll();
         diceB.roll();
 
-        diceHistory.add(diceA.selectedValue);
-        diceHistory.add(diceB.selectedValue);
+        this.diceHistory.add(diceA.selectedValue);
+        this.diceHistory.add(diceB.selectedValue);
 
         return (isPrime(diceA.selectedValue) || isPrime(diceB.selectedValue));
     }

@@ -1,5 +1,6 @@
 package com.gdjfx.cli;
 
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 
@@ -13,7 +14,7 @@ public class ProgramConsole { // console-based GDJFX.
     public static final String ANSI_CYAN = "\u001B[36m";
 
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, FileNotFoundException {
         System.out.println(ANSI_BLUE + "Welcome to Gambler's Delight. To get started, pick an option by inputting its keyword." + ANSI_RESET);
         System.out.println(ANSI_CYAN + "You may...");
         System.out.println("\t* gamble responsibly " + ANSI_RESET + "(slow mode)");

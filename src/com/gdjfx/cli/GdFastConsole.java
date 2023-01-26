@@ -2,6 +2,7 @@ package com.gdjfx.cli;
 
 import com.gdjfx.Card;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class GdFastConsole extends GdSlowConsole {
     }
 
     @Override
-    public void rollCycle() throws InterruptedException {
+    public void rollCycle() throws InterruptedException, FileNotFoundException {
         long initialBal = balance;
         long netBets = 0;
 
