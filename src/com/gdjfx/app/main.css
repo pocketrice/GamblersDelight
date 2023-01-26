@@ -42,6 +42,8 @@
 }
 
 
+/* Credit to https://stackoverflow.com/questions/48048943/javafx-8-scroll-bar-css */
+
 .scroll-bar:horizontal .track,
 .scroll-bar:vertical .track{
     -fx-background-color : #FFFFFF;
@@ -92,6 +94,8 @@
     -fx-background-insets : 2.0, 0.0, 0.0;
     -fx-background-radius : 2.0em;
 }
+
+/* End of credit */
 
 #btnPause {
     -fx-background-color: #958cad70 !important;

@@ -43,6 +43,11 @@ public class Card {
         cardRank = Rank.values()[cv-1];
     }
 
+    // Randomly select a choice out of a given pool either equally or individually weighted.
+    // @param choices - generic array of objects
+    // @param weights - array of weights of equal length to choices corresponding to each index
+    // @param autoEqualize - should weights be overwritten with an array of equalized weights?
+    // @return randomly selected object from objects
     public static <T> T weightedRandom(T[] choices, double[] weights, boolean autoEqualize)
     {
         double rng = Math.random();

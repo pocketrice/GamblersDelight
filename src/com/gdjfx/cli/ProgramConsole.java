@@ -98,6 +98,13 @@ public class ProgramConsole { // console-based GDJFX.
         }
     }*/
 
+    // Prompts the user with a message and returns user input; allows for restraints, case sensitivity, a toggle for next() or nextLine(), and handles error messages.
+    // @param message - initial text message to display to the user
+    // @param errorMessage - message to display in the event the input is invalid (does not match bounds)
+    // @param bounds - array of strings that rep. a whitelist of acceptable inputs
+    // @param lineMode - whether or not to read next() or nextLine()
+    // @param isCaseSensitive - whether or not to ignore case
+    // @return user-inputted string that is valid
     public static String prompt(String message, String errorMessage, String[] bounds, boolean lineMode, boolean isCaseSensitive) // <+> APM
     {
         Scanner input = new Scanner(System.in);
@@ -134,6 +141,13 @@ public class ProgramConsole { // console-based GDJFX.
         }
     }
 
+    // The "numeric equivalent" of the prompt outlined previously. Bounds are instead numbers rather than a whitelist, a toggle between integer and double is available.
+    // @param message - same as prev prompt
+    // @param errorMessage - same as prev prompt
+    // @param min - lowest bound, exclusive
+    // @param max - highest bound, exclusive
+    // @param isIntegerMode - whether or not to only accept integers
+    // @return user-inputted double/integer that is valid
     public static double prompt(String message, String errorMessage, double min, double max, boolean isIntegerMode)
     {
         Scanner input = new Scanner(System.in);

@@ -26,6 +26,10 @@ public class GdFastConsole extends GdSlowConsole {
         trialCount = tc;
     }
 
+
+    // Rolls a full cycle (1 trial). Overwritten to remove unnecessary console output and visual elements.
+    // @param N/A
+    // @return N/A
     @Override
     public void rollCycle() throws InterruptedException, FileNotFoundException {
         long initialBal = balance;
@@ -122,6 +126,9 @@ public class GdFastConsole extends GdSlowConsole {
         System.out.println("   Operation time: " + (posttime - pretime) + " ms\n\n\n\n\n");
     }
 
+    // Returns milliseconds since 0:00 1/1/1970 (Unix epoch).
+    // @param N/A
+    // @return milliseconds since Unix epoch (0:00 1/1/1970)
     public static long getMillisecSinceUnixEpoch() { // unix epoch = 1/1/1970
         return System.currentTimeMillis();
     }

@@ -38,6 +38,9 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         launch(args);
     }
 
+    // JavaFX method to start the application. Overwritten to setup/customize program.
+    // @param primaryStage - JFX required element
+    // @return N/A
     @Override
     public void start(Stage primaryStage) throws FileNotFoundException {
         stage = primaryStage;
@@ -57,6 +60,9 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         stage.show();
     }
 
+    // Initialize the root pane for the default/title screen.
+    // @param N/A
+    // @return N/A
     public void initializeRoot() throws FileNotFoundException {
         boolean isStaticAnim = true;
 
@@ -165,20 +171,34 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         });
     }
 
-    @Override // JavaFX method
+    // JavaFX method. Overwritten for debug line.
+    // @param N/A
+    // @return N/A
+    @Override
     public void stop() {
         System.out.println("Applet stopped.");
     }
 
-    @Override // JavaFX method
+
+    // JavaFX method. Overwritten for debug line.
+    // @param N/A
+    // @return N/A
+    @Override
     public void init() {
         System.out.println("Applet initialized.");
     }
 
+    // Returns a prepared image given a filepath (more readable/shorter implementation).
+    // @param filepath - path from content root
+    // @return prepared image
     public static Image retrieveImage(String filepath) throws FileNotFoundException {
         return new Image(new FileInputStream(filepath));
     }
 
+    // Returns prepared images given a file root and filepaths from that root.
+    // @param root - path to content root
+    // @param rootpaths - paths from content root
+    // @return prepared images
     public static Image[] retrieveImagesFromRoot (String root, String... rootpaths) {
         List<Image> images = new ArrayList<>();
 
@@ -194,6 +214,11 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         return images.toArray(new Image[0]);
     }
 
+
+
+    // Returns prepared images given filepaths.
+    // @param filepaths - paths from content root to image. Doesn't have to be all from same root.
+    // @return prepared images
     public static Image[] retrieveImages(String... filepaths) {
         List<Image> images = new ArrayList<>();
 
@@ -209,6 +234,12 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         return images.toArray(new Image[0]);
     }
 
+
+    // Builds an ImageView with some useful settings already set-up.
+    // @param image
+    // @param height - height of ImageView. Prioritized if using preserve ratio.
+    // @param width - width of ImageView
+    // @param shouldPreserveRatio - should image ratio be retained? Prioritizes height for setup.
     public static ImageView buildImageView(Image image, double height, double width, boolean shouldPreserveRatio) {
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(height);
@@ -218,11 +249,19 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         return imageView;
     }
 
+
+    // Helper method to set up both layoutX and layoutY for a Node. JavaFX for some reason doesn't have something like this.
+    // @param node
+    // @param xPos - layoutX value
+    // @param yPos - layoutY value
     public static void setLayout(Node node, double xPos, double yPos) {
         node.setLayoutX(xPos);
         node.setLayoutY(yPos);
     }
 
+    // Specific animation for use by the Slow Mode button. Plays a flashing effect and swaps to GdSlowScene.
+    // @param btn - active button
+    // @return N/A
     public void playSlowModeBtnAnim(Button btn) throws InterruptedException {
         GdSlowScene smScene = new GdSlowScene();
         Timeline selectedBtnAnim = new Timeline(
@@ -259,6 +298,10 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         selectedBtnAnim.play();
     }
 
+
+    // Specific animation for use by the Fast Mode button. Plays a flashing effect and swaps to GdFastScene.
+    // @param btn - active button
+    // @return N/A
     public void playFastModeBtnAnim(Button btn) throws InterruptedException {
         GdFastScene fmScene = new GdFastScene();
         Timeline selectedBtnAnim = new Timeline(
@@ -296,6 +339,14 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
     }
 
 
+    // Updates UI according to which mode button is selected (not active). This includes the marquee, image display, and button colors. Possible to drastically cut down on # of parameters.
+    // @param btn1 - slow mode button
+    // @param btn2 - fast mode button
+    // @param imgv - image display
+    // @param unactiveAnim - animation timeline for when no button is selected (TV static)
+    // @param activeImg - images representing either mode
+    // @param marquee - top-of-screen marquee text
+    // @param marqueeAnimator - Animated object handling position transitions for marquee
     public static void updateSelections(Button btn1, Button btn2, ImageView imgv, Timeline unactiveAnim, Image[] activeImg, Text marquee, Animated<Double> marqueeAnimator) { // Hardcoded; to generify allow for any # of activeBtnIndex & any # of buttons. Perhaps fix
         Timeline marqueeAnim = new Timeline(
                 new KeyFrame(Duration.ZERO, e -> marquee.setLayoutX(-1700)),
@@ -335,6 +386,9 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         }
     }
 
+    // Changes the root (pane) of the applet.
+    // @param pane - pane to be switched to
+    // @return N/A
     public static void changeRoot(Parent pane) {
         stage.getScene().setRoot(pane);
     }

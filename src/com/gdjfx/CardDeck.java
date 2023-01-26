@@ -19,7 +19,7 @@ public class CardDeck {
         cardCount = cards.length;
         deckColor = generateRandomColor();
     }
-// "There's millions of people living on this planet that haven't even tried crappy ice cream"
+
     public CardDeck(Card[] cards, Color color) {
         this.cards = cards;
         workingCards = cards;
@@ -27,7 +27,12 @@ public class CardDeck {
         deckColor = color;
     }
 
-    public Card[] generateSuit(Card.Suit suit) { // Generates a suit of cards. This is useful if you want to generate a custom suit more systematically
+
+    // Generates a suit of cards. This is useful if you want to generate a custom suit more systematically (e.g. easier to trim off all 3s from deck).
+    // No jokers are included.
+    // @param suit - card suit type to generate
+    // @return full 13-card suit
+    public Card[] generateSuit(Card.Suit suit) {
         Card[] newSuit = new Card[13];
         for (int i = 0; i < newSuit.length; i++) {
             newSuit[i] = new Card(suit, i+1);
@@ -36,6 +41,9 @@ public class CardDeck {
         return newSuit;
     }
 
+    // Generates a full, 52-card valid deck of cards. No jokers are included.
+    // @param N/A
+    // @return full 52-card deck
     public Card[] generateValidDeck() {
         List<Card> newDeck = new ArrayList<>();
         newDeck.addAll(Arrays.asList(generateSuit(Card.Suit.CLUB)));
@@ -46,16 +54,18 @@ public class CardDeck {
         return newDeck.toArray(new Card[]{});
     }
 
+    // Generates a random rgb color. deckColor is not used so this method has no use.
+    // @param N/A
+    // @return randomly generated rgb color
     public Color generateRandomColor() {
         return new Color((int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255));
     }
 
+    // Resets working cards deck (see above for info).
+    // @param N/A
+    // @return N/A
     public void resetWorkingCards() { // Resets working cards
         workingCards = cards;
-    }
-
-    public void shuffleDeck(int iterations) {
-
     }
 
 }
