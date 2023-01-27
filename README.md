@@ -5,7 +5,7 @@
 
 </p>
 
-_Lean green gambling machine running on the power of coffee beans and JavaFX._
+_Mean green gambling machine running on the power of coffee beans and JavaFX._
 <br><br>
 #
 > Execute program (app or CLI) at com.gdjfx/app/ProgramApplet or com.gdjfx/cli/ProgramConsole. Requires JavaFX.
