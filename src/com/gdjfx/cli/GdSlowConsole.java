@@ -336,10 +336,10 @@ public class GdSlowConsole {
         }
 
         if (includeExplicitSign) {
-            return (num > 0) ? monetaryColors[0] + "+$" + properTruncString + ANSI_RESET : ((num == 0) ? monetaryColors[1] + properTruncString + ANSI_RESET : monetaryColors[2] + "-$" + properTruncString + ANSI_RESET);
+            return (num > 0) ? monetaryColors[0] + "+$" + properTruncString + ANSI_RESET : ((num == 0) ? "$" + monetaryColors[1] + properTruncString + ANSI_RESET : monetaryColors[2] + "-$" + properTruncString + ANSI_RESET);
         }
         else {
-            return (num > 0) ? monetaryColors[0] + "$" + properTruncString + ANSI_RESET : ((num == 0) ? monetaryColors[1] + properTruncString + ANSI_RESET : monetaryColors[2] + "-$" + properTruncString + ANSI_RESET);
+            return (num > 0) ? monetaryColors[0] + "$" + properTruncString + ANSI_RESET : ((num == 0) ? "$" + monetaryColors[1] + properTruncString + ANSI_RESET : monetaryColors[2] + "-$" + properTruncString + ANSI_RESET);
         }
     }
 }

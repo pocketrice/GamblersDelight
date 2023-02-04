@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.application.ConditionalFeature;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -17,24 +18,46 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gdjfx.app.GdSlowScene.*;
+
 public class ProgramApplet extends Application { // javafx app gdjfx.
     static Stage stage;
     static Pane root;
-    Scene scene;
+    static Scene scene;
+    static Button btnSlowMode, btnFastMode;
+    static ImageView imgvDest;
+    static Timeline staticAnim;
+    static Image imgFastMode, imgSlowMode;
+    static Image[] imgStatic;
+
+    static Text marqueeText;
+    static Animated<Double> marqueeAnimator;
     static int activeBtnIndex = -1; // Which button has been selected (via KB)?
+    static boolean isMarqueeActive = false;
+
+    Font suburga = Font.loadFont("file:src/com/gdjfx/app/assets/suburga.otf", 20);
+    Font attorneyButtons = Font.loadFont("file:src/com/gdjfx/app/assets/attorneybuttons.ttf", 20);
+    Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 18);
+    AudioClip sfxSelectShort = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/select_short.wav").toURI().toString());
+    AudioClip sfxSelectLong = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/select_long.wav").toURI().toString());
 
     public static void main(String[] args) {
         launch(args);
@@ -60,33 +83,33 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         stage.setWidth(750);
         stage.setResizable(false);
         stage.show();
+
+        stage.setOnCloseRequest(new EventHandler<>() {
+            @Override
+            public void handle(WindowEvent event) {
+                stop();
+            }
+        });
     }
 
     // Initialize the root pane for the default/title screen.
     // @param N/A
     // @return N/A
     public void initializeRoot() throws FileNotFoundException {
-        boolean isStaticAnim = true;
-
-        Font suburga = Font.loadFont("file:src/com/gdjfx/app/assets/suburga.otf", 20);
-        Font attorneyButtons = Font.loadFont("file:src/com/gdjfx/app/assets/attorneybuttons.ttf", 20);
-        Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 18);
-        Image imgFastMode = retrieveImage("src/com/gdjfx/app/assets/fastmode.png");
-        Image imgSlowMode = retrieveImage("src/com/gdjfx/app/assets/slowmode.png");
-        Image[] imgStatic = retrieveImagesFromRoot("src/com/gdjfx/app/assets/", "static1.png", "static2.png", "static3.png", "static4.png");
-
-        ImageView imgvDest = buildImageView(imgStatic[0], 400, 0, true);
+        imgFastMode = retrieveImage("src/com/gdjfx/app/assets/fastmode.png");
+        imgSlowMode = retrieveImage("src/com/gdjfx/app/assets/slowmode.png");
+        imgStatic = retrieveImagesFromRoot("src/com/gdjfx/app/assets/", "static1.png", "static2.png", "static3.png", "static4.png");
+        imgvDest = buildImageView(imgStatic[0], 400, 0, true);
 
         Rectangle marquee = new Rectangle(0, 5,1000,50);
         marquee.setFill(Color.valueOf("#363533B0"));
-        Text marqueeText = new Text("Gamble responsibly! Runs through 10x cycles nice and slowly, with manual controls available. Great for learning the rules behind this mean green gambling machine!");
+        marqueeText = new Text("Gamble responsibly! Runs through 10x cycles nice and slowly, with manual controls available. Great for learning the rules behind this mean green gambling machine!");
         marqueeText.setFont(igiari);
         marqueeText.setFill(Color.valueOf("#dfe1db90"));
-        Animated<Double> marqueeAnimator = new Animated<>(marqueeText, PropertyWrapper.of(marqueeText.layoutXProperty()).custom(settings -> settings.withDuration(Duration.seconds(30))));
+        marqueeAnimator = new Animated<>(marqueeText, PropertyWrapper.of(marqueeText.layoutXProperty()).custom(settings -> settings.withDuration(Duration.seconds(30))));
 
-        Button btnSlowMode = new Button("Slow Mode");
 
-        Timeline staticAnim = new Timeline(
+        staticAnim = new Timeline(
                 new KeyFrame(Duration.ZERO, e -> imgvDest.setImage(imgStatic[0])),
                 new KeyFrame(Duration.seconds(0.08), e -> imgvDest.setImage(imgStatic[1])),
                 new KeyFrame(Duration.seconds(0.16), e -> imgvDest.setImage(imgStatic[2])),
@@ -94,11 +117,12 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         staticAnim.setCycleCount(Animation.INDEFINITE);
         staticAnim.playFromStart();
 
+        btnSlowMode = new Button("Slow Mode");
         btnSlowMode.setPrefHeight(50);
         btnSlowMode.setPrefWidth(230);
         btnSlowMode.setFont(suburga);
 
-        Button btnFastMode = new Button("Fast Mode");
+        btnFastMode = new Button("Fast Mode");
         btnFastMode.setFont(suburga);
         btnFastMode.setPrefHeight(50);
         btnFastMode.setPrefWidth(230);
@@ -107,7 +131,7 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
             staticAnim.stop();
             imgvDest.setImage(imgSlowMode);
             try {
-                playSlowModeBtnAnim(btnSlowMode);
+                playModeBtnAnim(btnSlowMode);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -120,7 +144,7 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
             imgvDest.setImage(imgFastMode);
             activeBtnIndex = -1;
             try {
-                playFastModeBtnAnim(btnFastMode);
+                playModeBtnAnim(btnFastMode);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -142,31 +166,34 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         root.getChildren().add(marqueeAnimator);
         setLayout(marqueeText,750,35);
 
-        scene = new Scene(root /*new GdSlowScene().initializeRoot()*/, 1024, 768);
+        scene = new Scene(root, 1024, 768);
         scene.getStylesheets().add("com/gdjfx/app/main.css");
-        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
             public void handle(KeyEvent ke) {
-                if (ke.getCode() == KeyCode.UP) {
-                    activeBtnIndex = (activeBtnIndex + 1 > 1) ? 0 : activeBtnIndex + 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
-                    updateSelections(btnSlowMode, btnFastMode, imgvDest, staticAnim, new Image[]{imgSlowMode, imgFastMode}, marqueeText, marqueeAnimator);
-                }
-
-                if (ke.getCode() == KeyCode.DOWN) {
-                    activeBtnIndex = (activeBtnIndex - 1 < 0) ? 1 : activeBtnIndex - 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
-                    updateSelections(btnSlowMode, btnFastMode, imgvDest, staticAnim, new Image[]{imgSlowMode, imgFastMode}, marqueeText, marqueeAnimator);
-                }
-
-                if (ke.getCode() == KeyCode.ESCAPE || ke.getCode() == KeyCode.Z) {
-                    activeBtnIndex = -1;
-                    updateSelections(btnSlowMode, btnFastMode, imgvDest, staticAnim, new Image[]{imgSlowMode, imgFastMode}, marqueeText, marqueeAnimator);
-                }
-
-                if (ke.getCode() == KeyCode.X || ke.getCode() == KeyCode.ENTER) {
-                    if (activeBtnIndex == 0) {
-                        btnSlowMode.fire();
+                switch (ke.getCode()) {
+                    case UP -> {
+                        playVolumedAudio(sfxSelectShort, sfxVolume);
+                        activeBtnIndex = (activeBtnIndex + 1 > 1) ? 0 : activeBtnIndex + 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
+                        updateSelections();
                     }
-                    else if (activeBtnIndex == 1) {
-                        btnFastMode.fire();
+
+                    case DOWN -> {
+                        playVolumedAudio(sfxSelectShort, sfxVolume);
+                        activeBtnIndex = (activeBtnIndex - 1 < 0) ? 1 : activeBtnIndex - 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
+                        updateSelections();
+                    }
+
+                    case ESCAPE, Z -> {
+                        activeBtnIndex = -1;
+                        updateSelections();
+                    }
+
+                    case X, ENTER -> {
+                        if (activeBtnIndex == 0) {
+                            btnSlowMode.fire();
+                        } else if (activeBtnIndex == 1) {
+                            btnFastMode.fire();
+                        }
                     }
                 }
             }
@@ -179,6 +206,7 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
     @Override
     public void stop() {
         System.out.println("Applet stopped.");
+        System.exit(0);
     }
 
 
@@ -261,86 +289,56 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         node.setLayoutY(yPos);
     }
 
-    // Specific animation for use by the Slow Mode button. Plays a flashing effect and swaps to GdSlowScene.
+
+
+    // Specific animation for use by mode buttons. Plays a flashing effect and swaps to corresponding scene.
     // @param btn - active button
     // @return N/A
-    public void playSlowModeBtnAnim(Button btn) throws InterruptedException {
-        GdSlowScene smScene = new GdSlowScene();
+    public void playModeBtnAnim(Button btn) throws InterruptedException {
         Timeline selectedBtnAnim = new Timeline(
-                new KeyFrame(Duration.ZERO, e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.ZERO, e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(0.15), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(0.15), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(0.3), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(0.3), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(0.45), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(0.45), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(0.6), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(0.6), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(0.75), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(0.75), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(0.9), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(0.9), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(1.05), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(1.05), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(1.2), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(1.2), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(1.35), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(1.35), e -> btn.getStyleClass().remove("selected0")),
+                new KeyFrame(Duration.ZERO, e -> {
+                    btn.getStyleClass().add("selected");
+                    playVolumedAudio(sfxSelectLong, sfxVolume);
+                }),
+                new KeyFrame(Duration.seconds(0.15), e -> btn.getStyleClass().remove("selected")),
+                new KeyFrame(Duration.seconds(0.3), e -> btn.getStyleClass().add("selected")),
+                new KeyFrame(Duration.seconds(0.45), e -> btn.getStyleClass().remove("selected")),
+                new KeyFrame(Duration.seconds(0.6), e -> btn.getStyleClass().add("selected")),
+                new KeyFrame(Duration.seconds(0.75), e -> btn.getStyleClass().remove("selected")),
+                new KeyFrame(Duration.seconds(0.9), e -> btn.getStyleClass().add("selected")),
+                new KeyFrame(Duration.seconds(1.05), e -> btn.getStyleClass().remove("selected")),
+                new KeyFrame(Duration.seconds(1.2), e -> btn.getStyleClass().add("selected")),
+                new KeyFrame(Duration.seconds(1.35), e -> btn.getStyleClass().remove("selected")),
                 new KeyFrame(Duration.seconds(1.6), e -> {
                     try {
-                        smScene.initializeRoot();
-                        changeRoot(smScene.root);
-                    } catch (Exception ex) {
+                        switch (btn.getText()) {
+                            case "Slow Mode" -> {
+                                GdSlowScene smScene = new GdSlowScene();
+                                smScene.initializeRoot();
+                                changeRoot(smScene.root);
+                            }
+                            case "Fast Mode" -> {
+                                GdFastScene fmScene = new GdFastScene();
+                                fmScene.initializeRoot();
+                                changeRoot(fmScene.root);
+                            }
+                        }
+
+                    }
+                    catch(Exception ex){
                         throw new RuntimeException(ex);
                     }
                 }));
-
         btn.getStyleClass().remove("active");
         selectedBtnAnim.play();
     }
 
 
-    // Specific animation for use by the Fast Mode button. Plays a flashing effect and swaps to GdFastScene.
-    // @param btn - active button
-    // @return N/A
-    public void playFastModeBtnAnim(Button btn) throws InterruptedException {
-        GdFastScene fmScene = new GdFastScene();
-        Timeline selectedBtnAnim = new Timeline(
-                new KeyFrame(Duration.ZERO, e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.ZERO, e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(0.15), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(0.15), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(0.3), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(0.3), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(0.45), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(0.45), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(0.6), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(0.6), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(0.75), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(0.75), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(0.9), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(0.9), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(1.05), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(1.05), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(1.2), e -> btn.getStyleClass().add("selected0")),
-                new KeyFrame(Duration.seconds(1.2), e -> btn.getStyleClass().remove("selected1")),
-                new KeyFrame(Duration.seconds(1.35), e -> btn.getStyleClass().add("selected1")),
-                new KeyFrame(Duration.seconds(1.35), e -> btn.getStyleClass().remove("selected0")),
-                new KeyFrame(Duration.seconds(1.6), e -> {
-                    try {
-                        fmScene.initializeRoot();
-                        changeRoot(fmScene.root);
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }));
-
-        btn.getStyleClass().remove("active");
-        selectedBtnAnim.play();
+    public static void resetMarquee() {
+        marqueeAnimator.setActive(false);
+        marqueeText.setLayoutX(800);
+        isMarqueeActive = false;
     }
-
-
     // Updates UI according to which mode button is selected (not active). This includes the marquee, image display, and button colors. Possible to drastically cut down on # of parameters.
     // @param btn1 - slow mode button
     // @param btn2 - fast mode button
@@ -349,41 +347,52 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
     // @param activeImg - images representing either mode
     // @param marquee - top-of-screen marquee text
     // @param marqueeAnimator - Animated object handling position transitions for marquee
-    public static void updateSelections(Button btn1, Button btn2, ImageView imgv, Timeline unactiveAnim, Image[] activeImg, Text marquee, Animated<Double> marqueeAnimator) { // Hardcoded; to generify allow for any # of activeBtnIndex & any # of buttons. Perhaps fix
+    public static void updateSelections() { // Hardcoded; to generify allow for any # of activeBtnIndex & any # of buttons. Perhaps fix
         Timeline marqueeAnim = new Timeline(
-                new KeyFrame(Duration.ZERO, e -> marquee.setLayoutX(-1700)),
-                new KeyFrame(Duration.ZERO, e -> marqueeAnimator.setActive(false)),
-                new KeyFrame(Duration.seconds(30), e -> marquee.setLayoutX(700)),
-                new KeyFrame(Duration.seconds(30), e ->  marqueeAnimator.setActive(true)));
+                new KeyFrame(Duration.ZERO, e -> {
+                    marqueeAnimator.setActive(false);
+                    marqueeText.setLayoutX(800);
+                    marqueeAnimator.setActive(true);
+                    marqueeText.setLayoutX(-1700);
+                }),
+                new KeyFrame(Duration.seconds(30), e -> marqueeText.setLayoutX(800)));
         marqueeAnim.setCycleCount(Animation.INDEFINITE);
 
         switch (activeBtnIndex) {
             case -1 -> {
-                btn1.getStyleClass().remove("active");
-                btn2.getStyleClass().remove("active");
+                btnSlowMode.getStyleClass().remove("active");
+                btnFastMode.getStyleClass().remove("active");
 
-                unactiveAnim.playFromStart();
-                marquee.setVisible(false);
+                staticAnim.playFromStart();
+                marqueeText.setVisible(false);
             }
 
             case 0 -> {
-                marquee.setVisible(true);
-                btn1.getStyleClass().add("active");
-                btn2.getStyleClass().remove("active");
-                marquee.setText("Gamble responsibly! Runs through 10x cycles nice and slowly, with manual controls available. Great for learning the rules behind this mean green gambling machine!");
-                unactiveAnim.stop();
-                imgv.setImage(activeImg[0]);
-                marqueeAnim.play();
+                marqueeText.setVisible(true);
+                btnSlowMode.getStyleClass().add("active");
+                btnFastMode.getStyleClass().remove("active");
+                marqueeText.setText("Gamble responsibly! Runs through 10x cycles nice and slowly, with manual controls available. Great for learning the rules behind this mean green gambling machine!");
+                staticAnim.stop();
+                imgvDest.setImage(imgSlowMode);
+
+                if (!isMarqueeActive) {
+                    marqueeAnim.play();
+                    isMarqueeActive = true;
+                }
             }
 
             case 1 -> {
-                marquee.setVisible(true);
-                btn1.getStyleClass().remove("active");
-                btn2.getStyleClass().add("active");
-                marquee.setText("Gamble your heart out! Runs a bulk number of cycles providing quick statistics. Useful for probability analysis. Trial number defaults to 5000x, but it may freely be set.");
-                unactiveAnim.stop();
-                imgv.setImage(activeImg[1]);
-                marqueeAnim.play();
+                marqueeText.setVisible(true);
+                btnSlowMode.getStyleClass().remove("active");
+                btnFastMode.getStyleClass().add("active");
+                marqueeText.setText("Gamble your heart out! Runs a bulk number of cycles providing quick statistics. Useful for probability analysis. Trial number defaults to 5000x, but it may freely be set.");
+                staticAnim.stop();
+                imgvDest.setImage(imgFastMode);
+
+                if (!isMarqueeActive) {
+                    marqueeAnim.play();
+                    isMarqueeActive = true;
+                }
             }
         }
     }
@@ -393,5 +402,21 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
     // @return N/A
     public static void changeRoot(Parent pane) {
         stage.getScene().setRoot(pane);
+    }
+
+
+    // Generate Background object of a solid color. Boilerplate reduction method.
+    // @param color - bg color
+    // @return built background filled of given color
+    public static Background buildSolidColorBackground(Color color) {
+        return new Background(new BackgroundFill(color, CornerRadii.EMPTY, Insets.EMPTY));
+    }
+
+    public static MediaPlayer buildAudio(Media audio, double volume, int cycleType) {
+        MediaPlayer audioPlayer = new MediaPlayer(audio);
+        audioPlayer.setVolume(volume);
+        audioPlayer.setCycleCount(cycleType);
+
+        return audioPlayer;
     }
 }
