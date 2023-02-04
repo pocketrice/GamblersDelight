@@ -5,7 +5,6 @@ package com.gdjfx.app;
 import com.gdjfx.Card;
 import com.gdjfx.Dice;
 import com.gdjfx.cli.GdFastConsole;
-import com.gdjfx.cli.GdSlowConsole;
 import eu.iamgio.animated.Animated;
 import eu.iamgio.animated.AnimatedMulti;
 import eu.iamgio.animated.Curve;
@@ -14,8 +13,6 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -24,8 +21,10 @@ import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -36,6 +35,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignT;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -48,7 +48,14 @@ public class GdFastScene extends GdFastConsole {
     TextFlow outputText;
     Group trialPrompt, ynPrompt, promptBox;
     Set<Node> roundAssets = new HashSet<>();
-    boolean isPaused = false, isRunningAgain = true;
+    boolean isPaused = false, isRunningAgain = true, isStartLoading = true;
+    Media bgmConfrontAllegro = new Media(new File("src/com/gdjfx/app/assets/audio/bgm/confrontation_allegro.mp3").toURI().toString());
+    MediaPlayer bgmPlayer = buildAudio(bgmConfrontAllegro, 0.15, MediaPlayer.INDEFINITE);
+    AudioClip sfxNewEvidence = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/new_evidence.wav").toURI().toString());
+    AudioClip sfxSelectLong = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/select_long.wav").toURI().toString());
+    AudioClip sfxCancel = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/cancel.wav").toURI().toString());
+    AudioClip sfxDollop = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/dollop.wav").toURI().toString());
+
 
     // Credit to https://stackoverflow.com/questions/46369046/how-to-wait-for-user-input-on-javafx-application-thread-without-using-showandwai
     private final Object PAUSE_KEY = new Object();
@@ -63,7 +70,8 @@ public class GdFastScene extends GdFastConsole {
 
     // End of credit
 
-    private int thousandsValue, hundredsValue, tensValue, onesValue;
+
+    private int thousandsValue = 5, hundredsValue = 0, tensValue = 0, onesValue = 0, rerunCount;
     private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
     private long balance, netBalance, bet, trialCount;
     private double totalWinRate, totalWinLoseRatio, doubleWinRate, quadWinRate, expectedValue;
@@ -80,7 +88,6 @@ public class GdFastScene extends GdFastConsole {
     final Font suburga = Font.loadFont("file:src/com/gdjfx/app/assets/suburga.otf", 20);
     final Font attorneyButtons = Font.loadFont("file:src/com/gdjfx/app/assets/attorneybuttons.ttf", 20);
     final Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 12);
-    final Font igiariTurnabout = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 16);
 
     public GdFastScene() {
         balance = 100;
@@ -147,6 +154,8 @@ public class GdFastScene extends GdFastConsole {
         setLayout(btnStart, 210,200);
         btnStart.setFont(suburga);
         btnStart.setOnAction(actionEvent -> {
+            sfxNewEvidence.play();
+            bgmPlayer.play();
             toggleObfPanel(obfuscatingPanel, false);
             btnStart.setVisible(false);
             try {
@@ -158,6 +167,7 @@ public class GdFastScene extends GdFastConsole {
 
 
 
+
         Button exitButton = new Button("Quit Game");
         exitButton.setFont(suburga);
         exitButton.setPrefSize(200,40);
@@ -166,7 +176,12 @@ public class GdFastScene extends GdFastConsole {
         setLayout(exitButton, 250,210);
         exitButton.setVisible(false);
         exitButton.setOnAction(actionEvent -> {
+            sfxSelectLong.play();
+            bgmPlayer.stop();
+            resetMarquee();
             changeRoot(ProgramApplet.root);
+            activeBtnIndex = -1;
+            updateSelections();
         });
 
         Text pauseText = new Text("PAUSED");
@@ -189,7 +204,9 @@ public class GdFastScene extends GdFastConsole {
         btnPause.setGraphic(new FontIcon(MaterialDesignP.PAUSE));
         btnPause.setTextFill(GD_ICEBERG);
         btnPause.setOnAction(actionEvent -> {
+            sfxDollop.play();
             if (!isPaused) {
+                bgmPlayer.pause();
                 isPaused = true;
                 pauseText.setOpacity(1);
                 exitButton.setVisible(true);
@@ -203,6 +220,7 @@ public class GdFastScene extends GdFastConsole {
                 exitButton.toFront();
             }
             else {
+                bgmPlayer.play();
                 isPaused = false;
                 pauseText.setOpacity(0);
                 exitButton.setVisible(false);
@@ -216,31 +234,40 @@ public class GdFastScene extends GdFastConsole {
         outputScroll.setContent(outputText);
         outputScroll.setPrefSize(370,450);
         outputScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        outputScroll.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
+        outputScroll.setBackground(buildSolidColorBackground(Color.TRANSPARENT));
         outputScroll.vvalueProperty().bind(outputText.heightProperty()); // Credit to https://stackoverflow.com/questions/13156896/javafx-auto-scroll-down-scrollpane; auto-moves scrollbar when textflow increases
 
         Rectangle outputPanel = new Rectangle(370,0,400,765);
         outputPanel.setFill(Color.valueOf("#2a2537C0"));
 
         Button btnYes = new Button("Yes");
-        btnYes.setFont(igiariTurnabout);
+        btnYes.setFont(igiari);
+        btnYes.setStyle("-fx-font-size: 18");
         btnYes.setStyle("-fx-background-color: #958cadD0");
         btnYes.setPrefHeight(20);
         btnYes.setPrefWidth(90);
         setLayout(btnYes, 430, 350);
         btnYes.setOnAction(actionEvent -> {
+            sfxCancel.play();
+            rerunCount++;
             isRunningAgain = true;
             resume();
         });
 
         Button btnNo = new Button("No");
-        btnNo.setFont(igiariTurnabout);
+        btnNo.setFont(igiari);
+        btnNo.setStyle("-fx-font-size: 18");
         btnNo.setStyle("-fx-background-color: #958cadD0");
         btnNo.setPrefHeight(20);
         btnNo.setPrefWidth(90);
         setLayout(btnNo, 560, 350);
         btnNo.setOnAction(actionEvent -> {
+            sfxCancel.play();
+            bgmPlayer.stop();
             changeRoot(ProgramApplet.root);
+            resetMarquee();
+            activeBtnIndex = -1;
+            updateSelections();
         });
 
         ynPrompt = new Group(btnYes, btnNo);
@@ -269,19 +296,19 @@ public class GdFastScene extends GdFastConsole {
         Rectangle onesDigitBG = new Rectangle(30,70,Color.valueOf("#9e8fb590"));
 
         Text thousandsDigit = new Text("" + thousandsValue);
-        thousandsDigit.setFont(igiariTurnabout);
+        thousandsDigit.setFont(igiari);
         thousandsDigit.setStyle("-fx-font-size: 30;");
         thousandsDigit.setFill(Color.valueOf("#392e44"));
         Text hundredsDigit = new Text("" + hundredsValue);
-        hundredsDigit.setFont(igiariTurnabout);
+        hundredsDigit.setFont(igiari);
         hundredsDigit.setStyle("-fx-font-size: 30;");
         hundredsDigit.setFill(Color.valueOf("#392e44"));
         Text tensDigit = new Text("" + tensValue);
-        tensDigit.setFont(igiariTurnabout);
+        tensDigit.setFont(igiari);
         tensDigit.setStyle("-fx-font-size: 30;");
         tensDigit.setFill(Color.valueOf("#392e44"));
         Text onesDigit = new Text("" + onesValue);
-        onesDigit.setFont(igiariTurnabout);
+        onesDigit.setFont(igiari);
         onesDigit.setStyle("-fx-font-size: 30;");
         onesDigit.setFill(Color.valueOf("#392e44"));
 
@@ -290,6 +317,7 @@ public class GdFastScene extends GdFastConsole {
         btnThousandsIncr.setPrefSize(30,8);
         btnThousandsIncr.setStyle("-fx-background-color: #b5aac6C0");
         btnThousandsIncr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             thousandsValue = (thousandsValue + 1 > 9) ? 0 : thousandsValue + 1;
             thousandsDigit.setText("" + thousandsValue);
         });
@@ -300,6 +328,7 @@ public class GdFastScene extends GdFastConsole {
         btnThousandsDecr.setStyle("-fx-background-color: #b5aac6C0");
 
         btnThousandsDecr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             thousandsValue = (thousandsValue - 1 < 0) ? 9: thousandsValue - 1;
             thousandsDigit.setText("" + thousandsValue);
         });
@@ -309,6 +338,7 @@ public class GdFastScene extends GdFastConsole {
         btnHundredsIncr.setPrefSize(30,8);
         btnHundredsIncr.setStyle("-fx-background-color: #b5aac6C0");
         btnHundredsIncr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             hundredsValue = (hundredsValue + 1 > 9) ? 0 : hundredsValue + 1;
             hundredsDigit.setText("" + hundredsValue);
         });
@@ -319,6 +349,7 @@ public class GdFastScene extends GdFastConsole {
         btnHundredsDecr.setStyle("-fx-background-color: #b5aac6C0");
 
         btnHundredsDecr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             hundredsValue = (hundredsValue - 1 < 0) ? 9: hundredsValue - 1;
             hundredsDigit.setText("" + hundredsValue);
         });
@@ -329,6 +360,7 @@ public class GdFastScene extends GdFastConsole {
         btnTensIncr.setPrefSize(30,8);
         btnTensIncr.setStyle("-fx-background-color: #b5aac6C0");
         btnTensIncr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             tensValue = (tensValue + 1 > 9) ? 0 : tensValue + 1;
             tensDigit.setText("" + tensValue);
         });
@@ -339,6 +371,7 @@ public class GdFastScene extends GdFastConsole {
         btnTensDecr.setStyle("-fx-background-color: #b5aac6C0");
 
         btnTensDecr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             tensValue = (tensValue - 1 < 0) ? 9: tensValue - 1;
             tensDigit.setText("" + tensValue);
         });
@@ -348,6 +381,7 @@ public class GdFastScene extends GdFastConsole {
         btnOnesIncr.setPrefSize(30,8);
         btnOnesIncr.setStyle("-fx-background-color: #b5aac6C0");
         btnOnesIncr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             onesValue = (onesValue + 1 > 9) ? 0 : onesValue + 1;
             onesDigit.setText("" + onesValue);
         });
@@ -358,6 +392,7 @@ public class GdFastScene extends GdFastConsole {
         btnOnesDecr.setStyle("-fx-background-color: #b5aac6C0");
 
         btnOnesDecr.setOnAction(actionEvent -> {
+            sfxDollop.play();
             onesValue = (onesValue - 1 < 0) ? 9 : onesValue - 1;
             onesDigit.setText("" + onesValue);
         });
@@ -367,6 +402,7 @@ public class GdFastScene extends GdFastConsole {
         btnSubmitBet.setPrefSize(60,20);
         btnSubmitBet.setStyle("-fx-background-color: #958cadD0");
         btnSubmitBet.setOnAction(actionEvent -> {
+            sfxCancel.play();
             resume();
         });
 
@@ -376,10 +412,10 @@ public class GdFastScene extends GdFastConsole {
         setLayout(tensDigitBG, 490, 325);
         setLayout(onesDigitBG,525, 325);
 
-        setLayout(thousandsDigit,427,380);
-        setLayout(hundredsDigit,462,380);
-        setLayout(tensDigit,498,380);
-        setLayout(onesDigit,532,380);
+        setLayout(thousandsDigit,430,378);
+        setLayout(hundredsDigit,465,378);
+        setLayout(tensDigit,500,378);
+        setLayout(onesDigit,535,378);
 
         setLayout(btnThousandsIncr,420,325);
         setLayout(btnThousandsDecr, 420, 385);
@@ -717,15 +753,17 @@ public class GdFastScene extends GdFastConsole {
         pause();
 
         promptBox.setLayoutY(180);
-        return thousandsValue * 1000 + hundredsValue * 100 + tensValue * 10 + onesValue;
+        return thousandsValue * 1000L + hundredsValue * 100L + tensValue * 10L + onesValue;
     }
+
+
 
 
 
     // Non-generic prompting method to ask the user if they want to run another cycle
     // @param N/A
     // @return whether or not to run another cycle
-    public boolean ynPrompt () {
+    public boolean ynPrompt() {
         updateOutputText(outputText, "{GD_PURPLE}* Cycle complete. Would you like to continue rolling trials?\n\n\n\n\n\n\n\n\n\n\n");
         ynPrompt.setVisible(true);
         trialPrompt.setVisible(false);
@@ -741,7 +779,6 @@ public class GdFastScene extends GdFastConsole {
     // @param N/A
     // @return N/A
     public void rollCycle() throws InterruptedException, FileNotFoundException {
-        int rerunCount = 0;
         long initialBal = balance;
         long netBets = 0;
 

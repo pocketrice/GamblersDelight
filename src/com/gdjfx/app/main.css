@@ -21,16 +21,12 @@
     -fx-background-color: #ffd0a3E0;
 }
 
-.button.selected0 {
+.button.selected {
    -fx-border-radius: 4px;
     -fx-border-color: #efcf73;
     -fx-border-width: 3px;
     -fx-border-style: solid; 
     -fx-background-color: #ffe78dE0;
-}
-
-.button.selected1 {
-    -fx-background-color: #bcbbb3E0;
 }
 
 .scroll-pane {
@@ -83,19 +79,42 @@
 
 .scroll-bar:horizontal .thumb,
 .scroll-bar:vertical .thumb {
-    -fx-background-color : #9e98ae;
+    -fx-background-color : #6d6b89;
     -fx-background-insets : 2.0, 0.0, 0.0;
     -fx-background-radius : 2.0em;
 }
 
 .scroll-bar:horizontal .thumb:hover,
 .scroll-bar:vertical .thumb:hover {
-    -fx-background-color : #6d6b89;
+    -fx-background-color : #5a5871;
     -fx-background-insets : 2.0, 0.0, 0.0;
     -fx-background-radius : 2.0em;
 }
 
 /* End of credit */
+
+
+/* Credit to https://stackoverflow.com/questions/51343759/how-to-change-fill-color-of-slider-in-javafx */
+#filled-slider .track {
+    -fx-background-color: transparent;
+}
+/* End of credit */
+
+
+
+/* Credit to https://stackoverflow.com/questions/50552728/dynamically-change-javafx-css-property */
+#filled-slider {
+    -dynamic-focus-color: #FFFFFF;
+    -dynamic-faint-focus-color: #FFFFFF22;
+}
+
+#filled-slider .thumb {
+    -fx-focus-color: -dynamic-focus-color;
+    -fx-faint-focus-color: -dynamic-faint-focus-color;
+}
+
+/* End of credit */
+
 
 #btnPause {
     -fx-background-color: #958cad70 !important;
@@ -109,3 +128,6 @@
     -fx-icon-color: #4c5c5eBD;
     -fx-icon-size: 70px;
 }
+
+
+
