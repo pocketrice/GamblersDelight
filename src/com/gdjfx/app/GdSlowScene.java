@@ -14,22 +14,17 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.media.AudioClip;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -38,14 +33,10 @@ import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignR;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignS;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignT;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,32 +44,10 @@ import static com.gdjfx.app.ProgramApplet.*;
 
 public class GdSlowScene extends GdSlowConsole {
     Pane root;
-    Group ynPrompt, betPrompt, promptBox, pauseGroup;
-    Rectangle obfPanel;
-    TextFlow outputText;
+    Group ynPrompt, betPrompt, promptBox;
     Set<Node> roundAssets = new HashSet<>();
-    boolean isPaused = false, isAttemptingQuadRound = false, isGameStarted = false, isPrompted = false, isStartLoading = false;
-
-    Font suburga = Font.loadFont("file:src/com/gdjfx/app/assets/suburga.otf", 20);
-    Font attorneyButtons = Font.loadFont("file:src/com/gdjfx/app/assets/attorneybuttons.ttf", 20);
-    Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 12);
-
-    static double bgmVolume = 0, sfxVolume = 0.3; // <- Default volume values.
-    Media bgmConfrontModerato = new Media(new File("src/com/gdjfx/app/assets/audio/bgm/confrontation_moderato.mp3").toURI().toString());
-    MediaPlayer bgmPlayer = buildAudio(bgmConfrontModerato, bgmVolume, MediaPlayer.INDEFINITE);
-    AudioClip sfxNewEvidence = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/new_evidence.wav").toURI().toString());
-    AudioClip sfxSelectLong = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/select_long.wav").toURI().toString());
-    AudioClip sfxCancel = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/cancel.wav").toURI().toString());
-    AudioClip sfxCard = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/card.wav").toURI().toString());
-    AudioClip sfxDollop = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/dollop.wav").toURI().toString());
-    AudioClip sfxFocus = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/focus.wav").toURI().toString());
-    AudioClip sfxDiceroll = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/diceroll.mp3").toURI().toString());
-    AudioClip sfxPeepHigh = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/peep_high.wav").toURI().toString());
-    AudioClip sfxPeepLow = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/peep_low.wav").toURI().toString());
-
-    Color GD_BLUE = Color.valueOf("#a3caed"), GD_DEW = Color.valueOf("#a0f6be"), GD_CYAN = Color.valueOf("#a3edd7"), GD_PURPLE = Color.valueOf("#aba3ed"), GD_GREEN = Color.valueOf("#aaeda3"), GD_RED = Color.valueOf("#f3746a"), GD_ICEBERG = Color.valueOf("#cff0f3"), GD_CRIMSON = Color.valueOf("#f7aaba"), GD_YELLOW = Color.valueOf("#f7e8aa");
-    Map<String, Color> GD_PRESETS = new HashMap<>();
-
+    TextFlow outputText;
+    boolean isPaused = false, isAttemptingQuadRound = false;
 
 
     // Credit to https://stackoverflow.com/questions/46369046/how-to-wait-for-user-input-on-javafx-application-thread-without-using-showandwai
@@ -94,12 +63,27 @@ public class GdSlowScene extends GdSlowConsole {
 
     // End of credit
 
-    private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses, tensValueBet = 1, onesValueBet = 0;
+
+    private final int TOTAL_ROUNDS = 10;
+    private int tensValueBet = 1, onesValueBet = 0;
+
+    private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
     private long balance, netBalance, bet;
+    private double totalWinRate, doubleWinRate, quadWinRate, totalWinLoseRatio, expectedValue;
     private List<Card> cardHistory = new ArrayList<>();
     private List<Integer> diceHistory = new ArrayList<>();
     private List<Integer> optDiceHistory = new ArrayList<>();
 
+
+
+
+
+    static final Color GD_BLUE = Color.valueOf("#a3caed"), GD_DEW = Color.valueOf("#a0f6be"), GD_CYAN = Color.valueOf("#a3edd7"), GD_PURPLE = Color.valueOf("#aba3ed"), GD_GREEN = Color.valueOf("#aaeda3"), GD_RED = Color.valueOf("#f3746a"), GD_ICEBERG = Color.valueOf("#cff0f3"), GD_CRIMSON = Color.valueOf("#f7aaba"), GD_YELLOW = Color.valueOf("#f7e8aa");
+    final Map<String, Color> GD_PRESETS = new HashMap<>();
+    final Font suburga = Font.loadFont("file:src/com/gdjfx/app/assets/suburga.otf", 20);
+    final Font attorneyButtons = Font.loadFont("file:src/com/gdjfx/app/assets/attorneybuttons.ttf", 20);
+    final Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 12);
+    final Font igiariTurnabout = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 16);
 
     public GdSlowScene() {
         currentRound = 0;
@@ -107,8 +91,6 @@ public class GdSlowScene extends GdSlowConsole {
         balance = 100;
         netBalance = 0;
     }
-
-
 
     // Load color presets into designated map.
     // @param N/A
@@ -125,11 +107,11 @@ public class GdSlowScene extends GdSlowConsole {
         GD_PRESETS.put("GD_YELLOW", GD_YELLOW);
     }
 
-
     // Toggles the obfuscation panel (dark overlay for pause screen, startup, etc). Necessary as it is difficult to both animate opacity and hide object's visibility without many lines.
+    // @param obfPanel - obfuscation panel
     // @param isVisible - whether to show or hide the panel
     // @return N/A
-    public void toggleObfPanel(boolean isVisible) {
+    public void toggleObfPanel(Rectangle obfPanel, boolean isVisible) {
         Animated<Double> obfAnimator = new Animated<>(obfPanel, PropertyWrapper.of(obfPanel.opacityProperty())).custom(settings -> settings.withDuration(Duration.seconds(4)));
         root.getChildren().add(obfAnimator);
 
@@ -155,146 +137,47 @@ public class GdSlowScene extends GdSlowConsole {
     // Initialize the root pane.
     // @param N/A
     // @return N/A
-    public void initializeRoot() throws FileNotFoundException {
+    public void initializeRoot() throws FileNotFoundException, InterruptedException {
         loadColorPresets();
 
-        obfPanel = new Rectangle(750, 500, Color.valueOf("#1a171eC0"));
+        Rectangle obfuscatingPanel = new Rectangle(750,500,Color.valueOf("#1a171eC0"));
+
         Button btnStart = new Button();
         btnStart.setGraphic(new FontIcon(MaterialDesignP.PLAY));
         btnStart.setId("btnStart");
         btnStart.setStyle("-fx-background-color: #cff0f3C0");
         btnStart.setPrefHeight(100);
         btnStart.setPrefWidth(300);
-        setLayout(btnStart, 210, 200);
+        setLayout(btnStart, 210,200);
         btnStart.setFont(suburga);
         btnStart.setOnAction(actionEvent -> {
-            isStartLoading = true;
-            playVolumedAudio(sfxNewEvidence, sfxVolume);
-            bgmPlayer.play();
-
-            toggleObfPanel(false);
-            Timeline activateKeybindsAnim = new Timeline(
-                    new KeyFrame(Duration.seconds(4), e -> {
-                        isGameStarted = true;
-                        root.requestFocus();
-                    })
-            );
-            activateKeybindsAnim.play();
-
+            toggleObfPanel(obfuscatingPanel, false);
             btnStart.setVisible(false);
             try {
                 rollCycle();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
-        });
-        btnStart.pressedProperty().addListener((observable, oldVal, isPressed) -> {
-            if (isPressed) {
-                btnStart.setStyle("-fx-background-color: derive(#cff0f3C0, -15%)");
-            }
-            else {
-                btnStart.setStyle("-fx-background-color: #cff0f3C0");
-            }
         });
 
 
-        Button btnQuit = new Button("Quit Game");
-        btnQuit.setFocusTraversable(false);
-        btnQuit.setFont(suburga);
-        btnQuit.setPrefSize(200, 40);
-        btnQuit.setTextFill(Color.valueOf("#4d3061"));
-        btnQuit.setStyle("-fx-background-color: #b2b8daD0");
-        setLayout(btnQuit, 250, 290);
-        btnQuit.setVisible(false);
-        btnQuit.setOnAction(actionEvent -> {
-            playVolumedAudio(sfxSelectLong, sfxVolume);
-            bgmPlayer.stop();
+
+        Button exitButton = new Button("Quit Game");
+        exitButton.setFont(suburga);
+        exitButton.setPrefSize(200,40);
+        exitButton.setTextFill(Color.valueOf("#4d3061"));
+        exitButton.setStyle("-fx-background-color: #c2c5d9C0");
+        setLayout(exitButton, 250,210);
+        exitButton.setVisible(false);
+        exitButton.setOnAction(actionEvent -> {
             changeRoot(ProgramApplet.root);
-            resetMarquee();
-            activeBtnIndex = -1;
-            updateSelections();
         });
-        btnQuit.pressedProperty().addListener((observable, oldVal, isPressed) -> {
-            if (isPressed) {
-                btnQuit.setStyle("-fx-background-color: derive(#b2b8daD0, -20%)");
-            }
-            else {
-                btnQuit.setStyle("-fx-background-color: #b2b8daD0");
-            }
-        });
-
-        Text bgmSlCaption = new Text("Background Music");
-        bgmSlCaption.setFont(igiari);
-        bgmSlCaption.setStyle("-fx-font-size:14");
-        bgmSlCaption.setFill(Color.valueOf("#c2d9d6"));
-
-        FilledSlider bgmSlider = new FilledSlider(Color.web("#709e98"), Color.web("#b4d2c9"));
-        bgmSlider.slider.setValue((bgmVolume * 100) / 0.15);
-        Text bgmSlVolNum = new Text((int) bgmSlider.slider.getValue() + "%");
-        bgmSlider.slider.valueProperty().addListener((obs, oldValue, newValue) -> {
-            bgmSlVolNum.setText((int) bgmSlider.slider.getValue() + "%");
-            bgmVolume = 0.15 * (bgmSlider.slider.getValue() / 100);
-            bgmPlayer.setVolume(bgmVolume); // Max volume is 0.15; thus rescale value around that max.
-        });
-        bgmSlider.slider.setOnMouseReleased(e -> playVolumedAudio(sfxPeepHigh, bgmVolume));
-
-        bgmSlVolNum.setFont(igiari);
-        bgmSlVolNum.setFill(Color.valueOf("#92b0ac"));
-        FontIcon bgmSlIcon = new FontIcon(MaterialDesignS.SPEAKER_WIRELESS);
-        bgmSlIcon.setIconSize(20);
-        bgmSlIcon.setFill(Color.valueOf("#ccf0ea"));
-        Group bgmSettings = new Group(bgmSlider, bgmSlCaption, bgmSlIcon, bgmSlVolNum);
-        bgmSettings.setVisible(false);
-        setLayout(bgmSlCaption, 265, 184);
-        setLayout(bgmSlIcon, 240, 186);
-        bgmSlider.setLayout(280, 190);
-        setLayout(bgmSlVolNum, 400, 188);
-
-
-        FilledSlider sfxSlider = new FilledSlider(Color.web("#76709e"), Color.web("#b7b4d2"));
-        sfxSlider.slider.setValue((sfxVolume * 100) / 0.8);
-        Text sfxSlVolNum = new Text((int) sfxSlider.slider.getValue() + "%");
-        sfxSlVolNum.setFont(igiari);
-        sfxSlVolNum.setFill(Color.valueOf("#9292b0"));
-        sfxSlider.slider.valueProperty().addListener((obs, oldValue, newValue) -> {
-            sfxSlVolNum.setText((int) sfxSlider.slider.getValue() + "%");
-            sfxVolume = 0.8 * (sfxSlider.slider.getValue() / 100);
-        });
-
-        sfxSlider.slider.setOnMouseReleased(e -> {
-            playVolumedAudio(sfxPeepLow, sfxVolume); // if check here!!
-            System.out.println("Mouse-release SFX played.");
-        });
-
-        Text sfxSlCaption = new Text("SFX");
-        sfxSlCaption.setFont(igiari);
-        sfxSlCaption.setStyle("-fx-font-size:14");
-        sfxSlCaption.setFill(Color.valueOf("#c2c5d9"));
-        FontIcon sfxSlIcon = new FontIcon(MaterialDesignR.RADIO_TOWER);
-        sfxSlIcon.setIconSize(20);
-        sfxSlIcon.setFill(Color.valueOf("#d2ccf0"));
-        Group sfxSettings = new Group(sfxSlider, sfxSlCaption, sfxSlIcon, sfxSlVolNum);
-        sfxSettings.setVisible(false);
-        setLayout(sfxSlCaption, 265, 234);
-        setLayout(sfxSlIcon, 240, 236);
-        sfxSlider.setLayout(280, 240);
-        setLayout(sfxSlVolNum, 400, 238);
-
-        ScrollPane outputScroll = new ScrollPane();
-        outputText = new TextFlow();
-        outputScroll.setContent(outputText);
-        outputScroll.setPrefSize(370, 450);
-        outputScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        outputScroll.setBackground(buildSolidColorBackground(Color.TRANSPARENT));
-        outputScroll.vvalueProperty().bind(outputText.heightProperty()); // Credit to https://stackoverflow.com/questions/13156896/javafx-auto-scroll-down-scrollpane; auto-moves scrollbar when textflow increases
-
 
         Text pauseText = new Text("PAUSED");
         pauseText.setFont(suburga);
         pauseText.setStyle("-fx-font-size: 50");
         pauseText.setFill(Color.valueOf("#c2c5d9"));
-        setLayout(pauseText, 260, 60);
+        setLayout(pauseText, 250, 60);
         Timeline pauseTextAnim = new Timeline(
                 new KeyFrame(Duration.ZERO, e -> pauseText.setVisible(true)),
                 new KeyFrame(Duration.seconds(0.6), e -> pauseText.setVisible(false)),
@@ -303,59 +186,47 @@ public class GdSlowScene extends GdSlowConsole {
         pauseTextAnim.playFromStart();
         pauseText.setOpacity(0);
 
-        Group pauseMenu = new Group(pauseText, btnQuit, bgmSettings, sfxSettings);
+        Group pauseMenu = new Group(pauseText, exitButton);
 
         Button btnPause = new Button();
-        btnPause.setFocusTraversable(false);
         btnPause.setId("btnPause");
         btnPause.setGraphic(new FontIcon(MaterialDesignP.PAUSE));
         btnPause.setTextFill(GD_ICEBERG);
         btnPause.setOnAction(actionEvent -> {
-            playVolumedAudio(sfxDollop, sfxVolume);
             if (!isPaused) {
-                bgmSlider.slider.requestFocus();
-                bgmPlayer.pause();
                 isPaused = true;
                 pauseText.setOpacity(1);
-                btnQuit.setVisible(true);
-                bgmSettings.setVisible(true);
-                sfxSettings.setVisible(true);
+                exitButton.setVisible(true);
                 btnPause.setGraphic(new FontIcon(MaterialDesignP.PLAY));
-                obfPanel.setOpacity(1);
-                obfPanel.setVisible(true);
+                obfuscatingPanel.setOpacity(1);
+                obfuscatingPanel.setVisible(true);
 
-                obfPanel.toFront();
+                obfuscatingPanel.toFront();
                 btnPause.toFront();
                 pauseMenu.toFront();
-            } else {
-                bgmPlayer.play();
-                isPaused = false;
-                pauseText.setOpacity(0);
-                btnQuit.setVisible(false);
-                bgmSettings.setVisible(false);
-                sfxSettings.setVisible(false);
-                btnPause.setGraphic(new FontIcon(MaterialDesignP.PAUSE));
-                obfPanel.setVisible(false);
-            }
-        });
-        btnPause.pressedProperty().addListener((observable, oldVal, isPressed) -> {
-            if (isPressed) {
-                btnPause.setStyle("-fx-background-color: derive(#958cad70, -15%)");
             }
             else {
-                btnPause.setStyle("-fx-background-color: #958cad70");
+                isPaused = false;
+                pauseText.setOpacity(0);
+                exitButton.setVisible(false);
+                btnPause.setGraphic(new FontIcon(MaterialDesignP.PAUSE));
+                obfuscatingPanel.setVisible(false);
             }
         });
 
+        ScrollPane outputScroll = new ScrollPane();
+        outputText = new TextFlow();
+        outputScroll.setContent(outputText);
+        outputScroll.setPrefSize(370,450);
+        outputScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        outputScroll.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
+        outputScroll.vvalueProperty().bind(outputText.heightProperty()); // Credit to https://stackoverflow.com/questions/13156896/javafx-auto-scroll-down-scrollpane; auto-moves scrollbar when textflow increases
 
-        pauseGroup = new Group(obfPanel, pauseMenu, btnPause);
-
-
-        Rectangle outputPanel = new Rectangle(370, 0, 400, 765);
+        Rectangle outputPanel = new Rectangle(370,0,400,765);
         outputPanel.setFill(Color.valueOf("#2a2537C0"));
 
 
-        Rectangle promptBoxBG = new Rectangle(300, 300, Color.valueOf("#6a4881A4"));
+        Rectangle promptBoxBG = new Rectangle(300,300, Color.valueOf("#6a4881A4"));
         Rectangle promptBarBG = new Rectangle(300, 25, Color.valueOf("#4d3061B0"));
 
         Text promptBarText = new Text("Select your choice");
@@ -375,210 +246,100 @@ public class GdSlowScene extends GdSlowConsole {
 
 
         Button btnYes = new Button("Yes");
-        btnYes.setFont(igiari);
-        btnYes.setStyle("-fx-font-size: 24");
+        btnYes.setFont(igiariTurnabout);
         btnYes.setStyle("-fx-background-color: #958cadD0");
         btnYes.setPrefHeight(20);
         btnYes.setPrefWidth(90);
         setLayout(btnYes, 430, 350);
         btnYes.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                btnYes.setStyle("-fx-background-color: derive(#cec4ed, 20%)");
-                playVolumedAudio(sfxCancel, sfxVolume);
-                isAttemptingQuadRound = true;
-                resume();
-                isPrompted = false;
-            }
+            isAttemptingQuadRound = true;
+            resume();
         });
-
-        Timeline btnYesColorTransition = generateColorTransition(btnYes, Color.web("#958cadD0"), Color.web("#cec4edD0"), "-fx-background-color", 0.7);
-
-        btnYes.hoverProperty().addListener((observable, oldVal, isHovered) -> {
-            root.requestFocus();
-            if (isHovered) {
-                btnYesColorTransition.setRate(1);
-                btnYesColorTransition.play();
-            } else {
-                btnYesColorTransition.setRate(-1);
-                btnYesColorTransition.play();
-            }
-        });
-
-        btnYes.focusedProperty().addListener((observable, oldVal, isFocused) -> {
-            if (isFocused) {
-                btnYesColorTransition.setRate(1);
-                btnYesColorTransition.play();
-            } else {
-                btnYesColorTransition.setRate(-1);
-                btnYesColorTransition.play();
-            }
-        });
-
-
 
         Button btnNo = new Button("No");
-        btnNo.setFont(igiari);
-        btnNo.setStyle("-fx-font-size: 24");
+        btnNo.setFont(igiariTurnabout);
         btnNo.setStyle("-fx-background-color: #958cadD0");
         btnNo.setPrefHeight(20);
         btnNo.setPrefWidth(90);
         setLayout(btnNo, 560, 350);
         btnNo.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxCancel, sfxVolume);
-                isAttemptingQuadRound = false;
-                resume();
-                isPrompted = false;
-            }
+            isAttemptingQuadRound = false;
+            resume();
         });
-
-        Timeline btnNoColorTransition = generateColorTransition(btnNo, Color.web("#958cadD0"), Color.web("#cec4edD0"), "-fx-background-color", 0.7);
-
-        btnNo.hoverProperty().addListener((observable, oldVal, isHovered) -> {
-            root.requestFocus();
-            if (isHovered) {
-                btnNoColorTransition.setRate(1);
-                btnNoColorTransition.play();
-            } else {
-                btnNoColorTransition.setRate(-1);
-                btnNoColorTransition.play();
-            }
-        });
-
-        btnNo.focusedProperty().addListener((observable, oldVal, isFocused) -> {
-            if (isFocused) {
-                btnNoColorTransition.setRate(1);
-                btnNoColorTransition.play();
-            } else {
-                btnNoColorTransition.setRate(-1);
-                btnNoColorTransition.play();
-            }
-        });
-
 
         ynPrompt = new Group(btnYes, btnNo);
 
 
-        Rectangle tensDigitBG = new Rectangle(30, 70, Color.valueOf("#9e8fb590"));
-        Rectangle onesDigitBG = new Rectangle(30, 70, Color.valueOf("#9e8fb590"));
+        Rectangle tensDigitBG = new Rectangle(30,70,Color.valueOf("#9e8fb590"));
+        Rectangle onesDigitBG = new Rectangle(30,70,Color.valueOf("#9e8fb590"));
 
         Text tensDigit = new Text("" + tensValueBet);
-        tensDigit.setFont(igiari);
-        tensDigit.setStyle("-fx-font-size: 30");
+        tensDigit.setFont(igiariTurnabout);
+        tensDigit.setStyle("-fx-font-size: 30;");
         tensDigit.setFill(Color.valueOf("#392e44"));
         Text onesDigit = new Text("" + onesValueBet);
-        onesDigit.setFont(igiari);
-        onesDigit.setStyle("-fx-font-size: 30");
+        onesDigit.setFont(igiariTurnabout);
+        onesDigit.setStyle("-fx-font-size: 30;");
         onesDigit.setFill(Color.valueOf("#392e44"));
 
         Button btnTensIncr = new Button("+");
-        btnTensIncr.setFocusTraversable(false);
         btnTensIncr.setFont(igiari);
-        btnTensIncr.setPrefSize(30, 8);
+        btnTensIncr.setPrefSize(30,8);
         btnTensIncr.setStyle("-fx-background-color: #b5aac6C0");
         btnTensIncr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                tensValueBet = (tensValueBet + 1 > 5) ? 1 : tensValueBet + 1;
-                tensDigit.setText("" + tensValueBet);
-            }
+            tensValueBet = (tensValueBet + 1 > 5) ? 1 : tensValueBet + 1;
+            tensDigit.setText("" + tensValueBet);
         });
-        btnTensIncr.pressedProperty().addListener((observable, oldVal, isPressed) -> {
-            if (isPressed) {
-                btnTensIncr.setStyle("-fx-background-color: derive(#b5aac6C0, -15%)");
-            }
-            else {
-                btnTensIncr.setStyle("-fx-background-color: #b5aac6C0");
-            }
-        });
-
 
         Button btnTensDecr = new Button("-");
-        btnTensDecr.setFocusTraversable(false);
         btnTensDecr.setFont(igiari);
-        btnTensDecr.setPrefSize(30, 8);
+        btnTensDecr.setPrefSize(30,8);
         btnTensDecr.setStyle("-fx-background-color: #b5aac6C0");
 
         btnTensDecr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                tensValueBet = (tensValueBet - 1 < 1) ? 5 : tensValueBet - 1;
-                tensDigit.setText("" + tensValueBet);
-            }
+            tensValueBet = (tensValueBet - 1 < 1) ? 5: tensValueBet - 1;
+            tensDigit.setText("" + tensValueBet);
         });
-        btnTensDecr.pressedProperty().addListener((observable, oldVal, isPressed) -> {
-            if (isPressed) {
-                btnTensDecr.setStyle("-fx-background-color: derive(#b5aac6C0, -15%)");
-            }
-            else {
-                btnTensDecr.setStyle("-fx-background-color: #b5aac6C0");
-            }
-        });
-
-
 
         Button btnOnesIncr = new Button("+");
-        btnOnesIncr.setFocusTraversable(false);
         btnOnesIncr.setFont(igiari);
-        btnOnesIncr.setPrefSize(30, 8);
+        btnOnesIncr.setPrefSize(30,8);
         btnOnesIncr.setStyle("-fx-background-color: #958cadD0");
-        btnOnesIncr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxFocus, sfxVolume);
-            }
-        });
         Button btnOnesDecr = new Button("-");
-        btnOnesDecr.setFocusTraversable(false);
         btnOnesDecr.setFont(igiari);
-        btnOnesDecr.setPrefSize(30, 8);
+        btnOnesDecr.setPrefSize(30,8);
         btnOnesDecr.setStyle("-fx-background-color: #958cadD0");
-        btnOnesDecr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxFocus, sfxVolume);
-            }
-        });
 
         Button btnSubmitBet = new Button("Submit");
         btnSubmitBet.setFont(igiari);
-        btnSubmitBet.setPrefSize(60, 20);
+        btnSubmitBet.setPrefSize(60,20);
         btnSubmitBet.setStyle("-fx-background-color: #958cadD0");
         btnSubmitBet.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxCancel, sfxVolume);
-                btnSubmitBet.setStyle("-fx-background-color: derive(#958cadD0, -15%)");
-                resume();
-                isPrompted = false;
-            }
+            resume();
         });
-
 
         betPrompt = new Group(tensDigitBG, onesDigitBG, tensDigit, onesDigit, btnTensIncr, btnTensDecr, btnOnesIncr, btnOnesDecr, btnSubmitBet);
         setLayout(tensDigitBG, 470, 325);
-        setLayout(onesDigitBG, 510, 325);
-        setLayout(tensDigit, 480, 378);
-        setLayout(onesDigit, 520, 378);
-        setLayout(btnTensIncr, 470, 325);
+        setLayout(onesDigitBG,510, 325);
+        setLayout(tensDigit,477,380);
+        setLayout(onesDigit,518,380);
+        setLayout(btnTensIncr,470,325);
         setLayout(btnTensDecr, 470, 385);
-        setLayout(btnOnesIncr, 510, 325);
-        setLayout(btnOnesDecr, 510, 385);
-        setLayout(btnSubmitBet, 580, 360);
+        setLayout(btnOnesIncr, 510,325);
+        setLayout(btnOnesDecr,510,385);
+        setLayout(btnSubmitBet, 580,360);
+
 
 
         promptBox = new Group(promptBoxBG, promptBarBG, promptBarText, promptBarArrow1, promptBarArrow2, ynPrompt, betPrompt);
-        setLayout(promptBox, 0, 200);
+        setLayout(promptBox,0, 200);
         setLayout(promptBoxBG, 400, 300);
-        setLayout(promptBarBG, 400, 300);
+        setLayout(promptBarBG, 400,300);
         setLayout(promptBarText, 490, 317);
         setLayout(promptBarArrow1, 440, 317);
         setLayout(promptBarArrow2, 630, 317);
         Animated<Double> pbAnimator = new Animated<>(promptBox, PropertyWrapper.of(promptBox.layoutYProperty())).custom(settings -> settings.withDuration(Duration.seconds(3)).withCurve(Curve.EASE_IN_OUT));
 
-        promptBox.layoutYProperty().addListener((observable, oldVal, isLayoutYChanged) -> { // Reset submit button color (for bet prompt) / focus (for yn prompt) when prompted again
-            if (isPrompted) {
-                btnSubmitBet.setStyle("-fx-background-color: #958cadD0");
-                root.requestFocus();
-            }
-        });
 
         Image imgVelvet = retrieveImage("src/com/gdjfx/app/assets/velvettable.png");
         ImageView imgvVelvet = buildImageView(imgVelvet, 340, 500, false);
@@ -588,7 +349,7 @@ public class GdSlowScene extends GdSlowConsole {
         root = new Pane();
         root.setBackground(new Background(new BackgroundImage(retrieveImage("src/com/gdjfx/app/assets/fmbackdrop_bl.jpg"), BackgroundRepeat.REPEAT, BackgroundRepeat.REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
         root.getChildren().add(imgvVelvet);
-        setLayout(imgvVelvet, -80, 120);
+        setLayout(imgvVelvet,-80,120);
         root.getChildren().add(outputPanel);
         root.getChildren().add(outputScroll);
         setLayout(outputScroll, 380, 0);
@@ -596,102 +357,8 @@ public class GdSlowScene extends GdSlowConsole {
         root.getChildren().add(pbAnimator);
         root.getChildren().add(pauseMenu);
         root.getChildren().add(btnPause);
-        root.getChildren().add(obfPanel);
+        root.getChildren().add(obfuscatingPanel);
         root.getChildren().add(btnStart);
-
-
-        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
-            int ynIndex = 0;
-            public void handle(KeyEvent ke) {
-                if (isGameStarted || ke.getCode() == KeyCode.ENTER) {
-                    switch (ke.getCode()) {
-                        case UP -> { // betPrompt (increment focused digit)
-                            if (!isPaused && isPrompted && betPrompt.isVisible() && !outputScroll.isFocused()) {
-                                btnTensIncr.fire();
-                            }
-                        }
-
-                        case DOWN -> { // betPrompt (decrement focused digit)
-                            if (!isPaused && isPrompted && betPrompt.isVisible() && !outputScroll.isFocused()) {
-                                btnTensDecr.fire();
-                            }
-                        }
-
-                        case LEFT -> { // both prompts (move focus leftward)
-                            if (isPaused && bgmSlider.slider.isFocused()) {
-                                playVolumedAudio(sfxPeepHigh, bgmVolume);
-                            }
-
-                            else if (isPaused && sfxSlider.slider.isFocused()) {
-                                playVolumedAudio(sfxPeepLow, sfxVolume);
-                            }
-
-                            else if (isPrompted && ynPrompt.isVisible()) {
-                                btnYes.requestFocus();
-                                ynIndex = 0;
-                            }
-
-                        }
-
-                        case RIGHT -> { // both prompts (move focus rightward)
-                            if (isPaused && bgmSlider.slider.isFocused()) {
-                                playVolumedAudio(sfxPeepHigh, bgmVolume);
-                            }
-
-                            else if (isPaused && sfxSlider.slider.isFocused()) {
-                                playVolumedAudio(sfxPeepLow, sfxVolume);
-                            }
-
-                            else if (isPrompted && ynPrompt.isVisible()) {
-                                btnNo.requestFocus();
-                                ynIndex = 1;
-
-                            }
-                        }
-
-                        case ESCAPE -> btnPause.fire();
-
-                        case Z -> { // ynPrompt - selects no (or focuses no?)
-                           root.requestFocus();
-                        }
-
-                        case X -> { // ynPrompt (select focused option), betPrompt (auto-move (end auto-move when focused submit) / submit on focused submit)
-                            if (!isPaused && isPrompted && ynPrompt.isVisible()) {
-                                switch (ynIndex) {
-                                    case 0 -> {
-                                        btnYes.fire();
-                                    }
-
-                                    case 1 -> {
-                                        btnNo.fire();
-                                    }
-                                }
-                            }
-                        }
-
-                        case ENTER -> { // ynPrompt (select focused option), betPrompt (submit)
-                            if (!isPaused && isPrompted && betPrompt.isVisible()) {
-                                btnSubmitBet.fire();
-                            }
-                            else if (!isGameStarted && !isStartLoading) {
-                                btnStart.fire();
-                            }
-                            else if (!isPaused && isPrompted && ynPrompt.isVisible()) {
-                                switch (ynIndex) {
-                                    case 0 -> {
-                                        btnYes.fire();
-                                    }
-
-                                    case 1 -> {
-                                        btnNo.fire();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
     }
 
 
@@ -759,7 +426,6 @@ public class GdSlowScene extends GdSlowConsole {
     // @param bet
     // @return whether or not user chose to try the quad round
     public boolean ynPrompt (double balance, double bet) {
-        isPrompted = true;
         updateOutputText(outputText, "{GD_YELLOW}* You currently qualify for a 2x win ", "(" + gdMonetaryParse(balance, false, false, false) + " -> " + gdMonetaryParse((balance + bet * 2), false, false, false) + ")", "{GD_YELLOW}.\nTry for a 4x win by trying to roll a pair ", "(" + gdMonetaryParse(balance, false, false, false) + " -> " + gdMonetaryParse((balance + bet * 4), false, false, false) + ")", "{GD_YELLOW}? \nYou will lose ALL profits if you lose.\n\n");
         ynPrompt.setVisible(true);
         betPrompt.setVisible(false);
@@ -774,7 +440,6 @@ public class GdSlowScene extends GdSlowConsole {
     // @param message - message to push to textflow
     // @return bet amount
     public long betPrompt (String message) {
-        isPrompted = true;
         updateOutputText(outputText, message);
         betPrompt.setVisible(true);
         ynPrompt.setVisible(false);
@@ -792,7 +457,7 @@ public class GdSlowScene extends GdSlowConsole {
     // @param includeExplicitSign
     // @param includeCOlor
     // @return monetary-parsed string
-    public static String gdMonetaryParse (double num, boolean includeDecimal, boolean includeExplicitSign, boolean includeColor) { // BUG: for some reason this doesn't work 100% (see 'expected value' on occassions)
+    public static String gdMonetaryParse(double num, boolean includeDecimal, boolean includeExplicitSign, boolean includeColor) { // BUG: for some reason this doesn't work 100% (see 'expected value' on occassions)
         String[] monetaryColors = (includeColor) ? new String[]{"{GD_DEW}", "{GD_BLUE}", "{GD_CRIMSON}"} : new String[]{"","",""};
 
         String properTruncString;
@@ -805,10 +470,10 @@ public class GdSlowScene extends GdSlowConsole {
         }
 
         if (includeExplicitSign) {
-            return (num > 0) ? monetaryColors[0] + "+$" + properTruncString : ((num == 0) ? "$" + monetaryColors[1] + properTruncString : monetaryColors[2] + "-$" + properTruncString);
+            return (num > 0) ? monetaryColors[0] + "+$" + properTruncString : ((num == 0) ? monetaryColors[1] + properTruncString : monetaryColors[2] + "-$" + properTruncString);
         }
         else {
-            return (num > 0) ? monetaryColors[0] + "$" + properTruncString : ((num == 0) ? "$" + monetaryColors[1] + properTruncString : monetaryColors[2] + "-$" + properTruncString);
+            return (num > 0) ? monetaryColors[0] + "$" + properTruncString : ((num == 0) ? monetaryColors[1] + properTruncString : monetaryColors[2] + "-$" + properTruncString);
         }
     }
 
@@ -817,6 +482,7 @@ public class GdSlowScene extends GdSlowConsole {
     // @param loadMessage
     // @return N/A
     public void gdFancyDelay(TextFlow output, String loadMessage) { // assumes that method is ONLY used for actions needing user input (e.g. roll dice) and then stop.
+        int recursionCount = 0;
         Text message = new Text(loadMessage + " ");
         Text loadingIcon = new Text("/");
         message.setFill(GD_CYAN);
@@ -848,6 +514,13 @@ public class GdSlowScene extends GdSlowConsole {
 
         fancySpinAnim.setCycleCount(Animation.INDEFINITE);
         fancySpinAnim.playFromStart();
+
+        /*
+        if (!completionMessage.isBlank()) {
+            output.getChildren().set(output.getChildren().size()-1, defaultMessage);
+            updateOutputText(output, completionMessage + "\n");
+        }
+        else updateOutputText(output, "\n");*/
     }
 
     // Create and display a visual representation of a generated dice roll. Final positions are slightly randomized and rotation/position has attached transitions.
@@ -856,7 +529,7 @@ public class GdSlowScene extends GdSlowConsole {
     // @param root - root pane
     // @param roundAssets - any assets (only visualized dice and cards) used within one single round. This grouping is used later.
     // @return N/A
-    public void visualizeDice(Dice diceA, Dice diceB, Set<Node> roundAssets) throws FileNotFoundException {
+    public void visualizeDice(Dice diceA, Dice diceB, Pane root, Set<Node> roundAssets) throws FileNotFoundException {
         Image imgDiceI = retrieveImage("src/com/gdjfx/app/assets/dicei.png");
         Image imgDiceII = retrieveImage("src/com/gdjfx/app/assets/diceii.png");
         Image imgDiceIII = retrieveImage("src/com/gdjfx/app/assets/diceiii.png");
@@ -896,12 +569,9 @@ public class GdSlowScene extends GdSlowConsole {
                     setLayout(imgvDiceB, proximityRandom(120,30,30),proximityRandom(190,30,30));
                     imgvDiceB.setRotate(proximityRandom(-40,30,30));
                 }),
-                new KeyFrame(Duration.seconds(6.2), e -> playVolumedAudio(sfxDiceroll, sfxVolume)),
                 new KeyFrame(Duration.seconds(8), e -> resume())
         );
 
-        root.getChildren().remove(pauseGroup);
-        root.getChildren().add(pauseGroup);
         visualizeDiceAnim.play();
     }
 
@@ -919,9 +589,7 @@ public class GdSlowScene extends GdSlowConsole {
     // @param root
     // @param roundAssets
     // @return N/A
-    public void visualizeCard(Card card, Set<Node> roundAssets) throws FileNotFoundException {
-        AtomicBoolean isCardReady = new AtomicBoolean(false);
-        AtomicBoolean isCardFlipped = new AtomicBoolean(false);
+    public void visualizeCard(Card card, Pane root, Set<Node> roundAssets) throws FileNotFoundException {
 
         Image cardCover = ((int)(Math.random()*2) == 0) ? retrieveImage("src/com/gdjfx/app/assets/redCardCover.png") : retrieveImage("src/com/gdjfx/app/assets/blueCardCover.png");
         Image[] cardFaces = new Image[52];
@@ -929,31 +597,24 @@ public class GdSlowScene extends GdSlowConsole {
         for (int i = 1; i <= 52; i++) {
             cardFaces[i-1] = retrieveImage("src/com/gdjfx/app/assets/cardfaces/card_" + i + ".png");
         }
+
         int faceIndex = ((card.cardSuit.ordinal() * 13) + (card.cardRank.ordinal() + 1)) - 1;
 
 
         ImageView imgvCard = buildImageView(cardCover, 120, 0, true);
-        Timeline cardRevealAnim = new Timeline(
-                new KeyFrame(Duration.seconds(2), e -> resume())
-        );
+        imgvCard.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            Timeline cardRevealAnim = new Timeline(
+                    new KeyFrame(Duration.seconds(2), e -> resume())
+            );
 
-        imgvCard.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
-            if (!isCardFlipped.get() && isCardReady.get()) {
-                playVolumedAudio(sfxCard, sfxVolume);
-                System.out.println("Card pressed.");
-                imgvCard.setImage(cardFaces[faceIndex]);
-                isCardFlipped.set(true);
-                cardRevealAnim.playFromStart();
-            }
-        });
-
-        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
-            public void handle(KeyEvent ke) {
-                if (ke.getCode() == KeyCode.SPACE && !isCardFlipped.get() && isCardReady.get()) {
-                    playVolumedAudio(sfxCard, sfxVolume);
+            boolean isCardFlipped = false;
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                if (!isCardFlipped) {
                     System.out.println("Card pressed.");
+                    // any other FX
                     imgvCard.setImage(cardFaces[faceIndex]);
-                    isCardFlipped.set(true);
+                    isCardFlipped = true;
                     cardRevealAnim.playFromStart();
                 }
             }
@@ -969,16 +630,12 @@ public class GdSlowScene extends GdSlowConsole {
         imgvCard.setRotate(proximityRandom(10,20,20));
         bulkAdd(roundAssets, imgvCard, cardAnimator);
         root.getChildren().addAll(imgvCard, cardAnimator);
-        root.getChildren().remove(pauseGroup);
-        root.getChildren().add(pauseGroup);
-
 
         Timeline visualizeCardAnim = new Timeline(
                 new KeyFrame(Duration.seconds(4), e -> {
                     setLayout(imgvCard, proximityRandom(80,30,30), proximityRandom(230,30,30));
                     imgvCard.setRotate(proximityRandom(25,20,20));
-                }),
-                new KeyFrame(Duration.seconds(5), e -> isCardReady.set(true))
+                })
         );
 
         visualizeCardAnim.play();
@@ -995,7 +652,7 @@ public class GdSlowScene extends GdSlowConsole {
         diceA.roll();
         diceB.roll();
         try {
-            visualizeDice(diceA, diceB, roundAssets);
+            visualizeDice(diceA, diceB, root, roundAssets);
         }
         catch (Exception e) {
             System.err.println("Visualization error: " + e);
@@ -1017,7 +674,7 @@ public class GdSlowScene extends GdSlowConsole {
 
         cardHistory.add(card);
         try {
-            visualizeCard(card, roundAssets);
+            visualizeCard(card, root, roundAssets);
         }
         catch (Exception e) {
             System.err.println("Visualization error: " + e);
@@ -1039,7 +696,7 @@ public class GdSlowScene extends GdSlowConsole {
         diceB.roll();
 
         try {
-            visualizeDice(diceA, diceB, roundAssets);
+            visualizeDice(diceA, diceB, root, roundAssets);
         }
         catch (Exception e) {
             System.err.println("Visualization error: " + e);
@@ -1057,7 +714,7 @@ public class GdSlowScene extends GdSlowConsole {
     // @param N/A
     // @return N/A
     public void rollCycle() throws InterruptedException {
-        final int TOTAL_ROUNDS = 10;
+
         long initialBal = balance;
         long netBets = 0;
         List<Double> outcomeChances = new ArrayList<>();
@@ -1085,7 +742,7 @@ public class GdSlowScene extends GdSlowConsole {
             bet = betPrompt("{GD_ICEBERG}> Choose a bet amount ($10 —— $50).\n");//Long.parseLong(prompt(ANSI_CYAN + "➢ Choose a bet amount ($10 —— $50)." + ANSI_RESET, "Error: bet must be an increment of $10 within $10-$50.", new String[]{"10","20","30","40","50"}, false, false)); // BUG: you can (probably) select a bet that goes beyond your bal. Fix this later.
             balance -= bet;
             netBets += bet;
-            updateOutputText(outputText, "Your bet has been withdrawn. You now have " + gdMonetaryParse(balance, true, false, false) + ". ", "{GD_RED}(-$" + bet + ".00)\n");
+            updateOutputText(outputText, "Your bet has been withdrawn. You now have $" + balance + ".00. ", "{GD_RED}(-$" + bet + ".00)\n");
 
 
             while (!hasLostRound && !hasEndedRound) {
@@ -1174,13 +831,13 @@ public class GdSlowScene extends GdSlowConsole {
 
             balance += winAmount;
             netBalance = balance - initialBal;
-            double expectedValue = truncate((double) (netBalance - netBets) / currentRound, 2);
+            expectedValue = truncate((double) (netBalance - netBets) / currentRound, 2);
 
             // Takes into account div by zero problem
-            double totalWinRate = (currentRound != 0) ? (double) totalWins / currentRound : (double) totalWins;
-            double totalWinLoseRatio = (totalLosses != 0) ? (double) totalWins / totalLosses : 0;
-            double doubleWinRate = (doubleLosses + doubleWins != 0) ? (double) doubleWins / (doubleWins + doubleLosses) : (double) doubleWins;
-            double quadWinRate = (quadLosses + quadWins != 0) ? (double) quadWins / (quadWins + quadLosses) : (double) quadWins;
+            totalWinRate = (currentRound != 0) ? (double) totalWins / currentRound : (double) totalWins;
+            totalWinLoseRatio = (totalLosses != 0) ? (double) totalWins / totalLosses : 0;
+            doubleWinRate = (doubleLosses + doubleWins != 0) ? (double) doubleWins / (doubleWins + doubleLosses) : (double) doubleWins;
+            quadWinRate = (quadLosses + quadWins != 0) ? (double) quadWins / (quadWins + quadLosses) : (double) quadWins;
 
             // ROUND STATISTICS
             // BALANCE, NET BALANCE
@@ -1218,150 +875,5 @@ public class GdSlowScene extends GdSlowConsole {
     @SafeVarargs
     public static <T extends Collection<E>, E> void bulkAdd(T collection, E... items) { // <+> APM -- this may seem redundant (see List.addAll) but this might be useful when adding a bunch of individual items.
         collection.addAll(Arrays.asList(items));
-    }
-
-    public static String stringifyOpaqueColor(Color color) {
-        return "#" + color.toString().substring(2, color.toString().length()-2);
-    }
-
-    public static String stringifyAlphaColor(Color color) {
-        return "#" + color.toString().substring(2);
-    }
-
-    public static void playVolumedAudio(AudioClip audioClip, double volume) {
-        audioClip.setVolume(volume);
-        audioClip.play();
-    }
-
-    // Note: this only returns one lerped value on the entire "gradient continuum" (ooh, fancy!). This is to generify/allow for more use-cases. See generateColorTransition for an implementation of the full gradient.
-    public static Color lerpColor(Color startColor, Color endColor, double value) {
-        double[] rgbSc = {startColor.getRed(), startColor.getGreen(), startColor.getBlue(), startColor.getOpacity()};
-        double[] rgbEc = {endColor.getRed(), endColor.getGreen(), endColor.getBlue(), endColor.getOpacity()};
-        return new Color(
-                rgbSc[0] + (rgbEc[0] - rgbSc[0]) * value,
-                rgbSc[1] + (rgbEc[1] - rgbSc[1]) * value,
-                rgbSc[2] + (rgbEc[2] - rgbSc[2]) * value,
-                rgbSc[3] + (rgbEc[3] - rgbSc[3]) * value);
-    }
-
-    /*
-    ** Implement event handlers like so:
-
-     node.handlerProperty().addListener((observable, oldVal, isPropertyTrue) -> {
-            if (isPropertyTrue) {
-                nodeColorTransition.setRate(1);
-                nodeColorTransition.play();
-            } else {
-                nodeColorTransition.setRate(-1);
-                nodeColorTransition.play();
-            }
-        });
-     */
-
-    public static Timeline generateColorTransition(Node node, Color startColor, Color endColor, String cssStyle, double duration) {
-        Timeline colorAnim = new Timeline();
-
-        for (double i = 0; i < 1.0; i += 0.001) {
-            double finalI = i; // Copy i to "effectively final" variable to comply for lambda
-            colorAnim.getKeyFrames().add(new KeyFrame(Duration.seconds(duration * i), e -> node.setStyle(cssStyle + ": " + stringifyAlphaColor(lerpColor(startColor, endColor, finalI)))));
-        }
-
-        return colorAnim;
-    }
-
-
-
-    // Custom JavaFX node.
-    public class FilledSlider extends Group {
-        Slider slider = new Slider();
-        Rectangle sliderProgress = new Rectangle();
-        Rectangle sliderProgressBorder = new Rectangle();
-
-        public FilledSlider() {
-            scene.getStylesheets().add("com/gdjfx/app/main.css");
-            slider.setId("filled-slider"); // ** Requires #color-slider .track { -fx-background-color: transparent; } in main.css
-            sliderProgress.heightProperty().bind(slider.heightProperty().subtract(8));
-            sliderProgress.widthProperty().bind(slider.widthProperty());
-            sliderProgress.setFill(Color.web("#969696"));
-
-            // Dynamic slider thumb focus/faint focus colors (#filled-slider .thumb) - credit to https://stackoverflow.com/questions/50552728/dynamically-change-javafx-css-property
-            slider.setStyle("-dynamic-focus-color: derive(#969696, -40%)");
-            slider.setStyle("-dynamic-faint-focus-color: derive(#969696A0, -40%)");
-
-            sliderProgressBorder.heightProperty().bind(slider.heightProperty().subtract(5));
-            sliderProgressBorder.widthProperty().bind(slider.widthProperty().add(3));
-            sliderProgressBorder.setFill(Color.web("#969696").deriveColor(0, 0, -40, 0));
-
-            sliderProgress.setArcHeight(15);
-            sliderProgress.setArcWidth(10);
-            sliderProgressBorder.setArcHeight(15);
-            sliderProgressBorder.setArcWidth(10);
-
-
-            // Update progress/progress border based on default volume value.
-            sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, #2D819D %d%%, #969696 %d%%);",
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(#2D819D, -40%%) %d%%, derive(#969696, -40%%) %d%%);",
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            // Update progress/progress border on change.
-            slider.valueProperty().addListener((observableValue, oldVal, newVal) -> {
-                sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, #2D819D %d%%, #969696 %d%%);",
-                        newVal.intValue(), newVal.intValue()));
-
-                sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(#2D819D, -40%%) %d%%, derive(#969696, -40%%) %d%%);",
-                        newVal.intValue(), newVal.intValue()));
-            });
-            this.getChildren().addAll(sliderProgressBorder, sliderProgress, slider);
-        }
-        public FilledSlider(Color filledColor, Color unfilledColor)  {
-            scene.getStylesheets().add("com/gdjfx/app/main.css");
-            slider.setId("filled-slider"); // ** Requires #color-slider .track { -fx-background-color: transparent; } in main.css
-            sliderProgress.heightProperty().bind(slider.heightProperty().subtract(8));
-            sliderProgress.widthProperty().bind(slider.widthProperty());
-            sliderProgress.setFill(filledColor);
-
-            // Dynamic slider thumb focus/faint focus colors (#filled-slider .thumb)
-            slider.setStyle("-dynamic-focus-color: derive(" + stringifyOpaqueColor(filledColor) + ", -40%)");
-            slider.setStyle("-dynamic-faint-focus-color: derive(" + stringifyOpaqueColor(filledColor) + "A0, -40%)");
-
-            sliderProgressBorder.heightProperty().bind(slider.heightProperty().subtract(5));
-            sliderProgressBorder.widthProperty().bind(slider.widthProperty().add(3));
-            sliderProgressBorder.setFill(filledColor.deriveColor(0, 0, -40, 0));
-
-            sliderProgress.setArcHeight(15);
-            sliderProgress.setArcWidth(10);
-            sliderProgressBorder.setArcHeight(15);
-            sliderProgressBorder.setArcWidth(10);
-
-
-            // Update progress/progress border based on default volume value.
-            sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(filledColor) + " %d%%, " + stringifyOpaqueColor(unfilledColor) + " %d%%);", // Remove "0x" from start of Color string.
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(" + stringifyOpaqueColor(filledColor) + ", -40%%) %d%%, derive(" + stringifyOpaqueColor(unfilledColor) + ", -40%%) %d%%);", // Remove "0x" from start of Color string.
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            // Update progress/progress border on change.
-            slider.valueProperty().addListener((observableValue, oldVal, newVal) -> {
-                sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(filledColor) + " %d%%, " + stringifyOpaqueColor(unfilledColor) + " %d%%);", // Remove "0x" from start of Color string.
-                        newVal.intValue(), newVal.intValue()));
-
-                sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(" + stringifyOpaqueColor(filledColor) + ", -40%%) %d%%, derive(" + stringifyOpaqueColor(unfilledColor) + ", -40%%) %d%%);", // Remove "0x" from start of Color string.
-                        newVal.intValue(), newVal.intValue()));
-            });
-
-            this.getChildren().addAll(sliderProgressBorder, sliderProgress, slider);
-        }
-
-        public void setLayout(double layoutX, double layoutY) { // Call this in place of the general setLayout method.
-            slider.setLayoutX(layoutX);
-            sliderProgress.setLayoutX(layoutX);
-            sliderProgressBorder.setLayoutX(layoutX - 1.6);
-            slider.setLayoutY(layoutY);
-            sliderProgress.setLayoutY(layoutY + 3.5);
-            sliderProgressBorder.setLayoutY(layoutY + 2.2);
-        }
     }
 }
