@@ -81,8 +81,6 @@ public class GdFastScene extends GdFastConsole {
 
 
 
-
-
     static final Color GD_BLUE = Color.valueOf("#a3caed"), GD_DEW = Color.valueOf("#a0f6be"), GD_CYAN = Color.valueOf("#a3edd7"), GD_PURPLE = Color.valueOf("#aba3ed"), GD_GREEN = Color.valueOf("#aaeda3"), GD_RED = Color.valueOf("#f3746a"), GD_ICEBERG = Color.valueOf("#cff0f3"), GD_CRIMSON = Color.valueOf("#f7aaba"), GD_YELLOW = Color.valueOf("#f7e8aa");
     final Map<String, Color> GD_PRESETS = new HashMap<>();
     final Font suburga = Font.loadFont("file:src/com/gdjfx/app/assets/suburga.otf", 20);
@@ -164,7 +162,6 @@ public class GdFastScene extends GdFastConsole {
                 throw new RuntimeException(e);
             }
         });
-
 
 
 
@@ -720,7 +717,7 @@ public class GdFastScene extends GdFastConsole {
 
         cardHistory.add(card);
 
-        return (card.cardSuit.equals(Card.Suit.DIAMOND) || card.cardSuit.equals(Card.Suit.SPADE) || (card.cardSuit.equals(Card.Suit.HEART) && card.cardRank.ordinal() > 9));
+        return (card.cardSuit.equals(Card.Suit.DIAMOND) || card.cardSuit.equals(Card.Suit.SPADE) || (card.cardSuit.equals(Card.Suit.HEART) && card.cardRank.getValue() > 10));
     }
 
 

@@ -63,10 +63,11 @@ public class GdSlowScene extends GdSlowConsole {
     Font attorneyButtons = Font.loadFont("file:src/com/gdjfx/app/assets/attorneybuttons.ttf", 20);
     Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 12);
 
-    static double bgmVolume = 0, sfxVolume = 0.3; // <- Default volume values.
+    static double bgmVolume = 0, sfxVolume = 0.15; // <- Default volume values.
     Media bgmConfrontModerato = new Media(new File("src/com/gdjfx/app/assets/audio/bgm/confrontation_moderato.mp3").toURI().toString());
     MediaPlayer bgmPlayer = buildAudio(bgmConfrontModerato, bgmVolume, MediaPlayer.INDEFINITE);
     AudioClip sfxNewEvidence = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/new_evidence.wav").toURI().toString());
+    AudioClip sfxSelectShort = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/select_short.wav").toURI().toString());
     AudioClip sfxSelectLong = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/select_long.wav").toURI().toString());
     AudioClip sfxCancel = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/cancel.wav").toURI().toString());
     AudioClip sfxCard = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/card.wav").toURI().toString());
@@ -200,11 +201,13 @@ public class GdSlowScene extends GdSlowConsole {
 
 
         Button btnQuit = new Button("Quit Game");
-        btnQuit.setFocusTraversable(false);
         btnQuit.setFont(suburga);
         btnQuit.setPrefSize(200, 40);
         btnQuit.setTextFill(Color.valueOf("#4d3061"));
-        btnQuit.setStyle("-fx-background-color: #b2b8daD0");
+        addStyle(btnQuit, "-fx-border-color: #707cc5");
+        addStyle(btnQuit, "-fx-border-radius: 5px");
+        addStyle(btnQuit, "-fx-border-style: solid");
+        addStyle(btnQuit, "-fx-background-color: #b2b8daD0");
         setLayout(btnQuit, 250, 290);
         btnQuit.setVisible(false);
         btnQuit.setOnAction(actionEvent -> {
@@ -215,6 +218,10 @@ public class GdSlowScene extends GdSlowConsole {
             activeBtnIndex = -1;
             updateSelections();
         });
+        Timeline btnQuitColorTransition = generateColorTransition(btnQuit, Color.web("#b2b8daD0"), Color.web("#afc5ffC0"), "-fx-background-color", 0.3);
+        Timeline btnQuitTextColorTransition = generateColorTransition(btnQuit, Color.web("#4d3061"), Color.web("#303a79"), "-fx-text-fill", 0.3);
+        Timeline btnQuitBorderTransition = generateNumericRuleTransition(btnQuit, 0, 2, "-fx-border-width", "px", 0.2);
+
         btnQuit.pressedProperty().addListener((observable, oldVal, isPressed) -> {
             if (isPressed) {
                 btnQuit.setStyle("-fx-background-color: derive(#b2b8daD0, -20%)");
@@ -222,6 +229,21 @@ public class GdSlowScene extends GdSlowConsole {
             else {
                 btnQuit.setStyle("-fx-background-color: #b2b8daD0");
             }
+        });
+        btnQuit.focusedProperty().addListener((observable, oldVal, isFocused) -> {
+            if (isFocused) {
+                btnQuitColorTransition.setRate(1);
+                btnQuitTextColorTransition.setRate(1);
+                btnQuitBorderTransition.setRate(1);
+
+            } else {
+                btnQuitColorTransition.setRate(-1);
+                btnQuitTextColorTransition.setRate(-1);
+                btnQuitBorderTransition.setRate(-1);
+            }
+            btnQuitColorTransition.play();
+            btnQuitTextColorTransition.play();
+            btnQuitBorderTransition.play();
         });
 
         Text bgmSlCaption = new Text("Background Music");
@@ -305,6 +327,20 @@ public class GdSlowScene extends GdSlowConsole {
 
         Group pauseMenu = new Group(pauseText, btnQuit, bgmSettings, sfxSettings);
 
+        // MISPLACED
+        Button btnSubmitBet = new Button("Submit");
+        btnSubmitBet.setFont(igiari);
+        btnSubmitBet.setPrefSize(60, 20);
+        btnSubmitBet.setStyle("-fx-background-color: #958cadD0");
+        btnSubmitBet.setOnAction(actionEvent -> {
+            if (isPrompted) {
+                playVolumedAudio(sfxCancel, sfxVolume);
+                btnSubmitBet.setStyle("-fx-background-color: derive(#958cadD0, -15%)");
+                resume();
+                isPrompted = false;
+            }
+        });
+
         Button btnPause = new Button();
         btnPause.setFocusTraversable(false);
         btnPause.setId("btnPause");
@@ -313,7 +349,6 @@ public class GdSlowScene extends GdSlowConsole {
         btnPause.setOnAction(actionEvent -> {
             playVolumedAudio(sfxDollop, sfxVolume);
             if (!isPaused) {
-                bgmSlider.slider.requestFocus();
                 bgmPlayer.pause();
                 isPaused = true;
                 pauseText.setOpacity(1);
@@ -327,6 +362,9 @@ public class GdSlowScene extends GdSlowConsole {
                 obfPanel.toFront();
                 btnPause.toFront();
                 pauseMenu.toFront();
+                bgmSlider.slider.requestFocus();
+                btnSubmitBet.setFocusTraversable(false);
+
             } else {
                 bgmPlayer.play();
                 isPaused = false;
@@ -336,6 +374,7 @@ public class GdSlowScene extends GdSlowConsole {
                 sfxSettings.setVisible(false);
                 btnPause.setGraphic(new FontIcon(MaterialDesignP.PAUSE));
                 obfPanel.setVisible(false);
+                btnSubmitBet.setFocusTraversable(true);
             }
         });
         btnPause.pressedProperty().addListener((observable, oldVal, isPressed) -> {
@@ -538,19 +577,6 @@ public class GdSlowScene extends GdSlowConsole {
             }
         });
 
-        Button btnSubmitBet = new Button("Submit");
-        btnSubmitBet.setFont(igiari);
-        btnSubmitBet.setPrefSize(60, 20);
-        btnSubmitBet.setStyle("-fx-background-color: #958cadD0");
-        btnSubmitBet.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxCancel, sfxVolume);
-                btnSubmitBet.setStyle("-fx-background-color: derive(#958cadD0, -15%)");
-                resume();
-                isPrompted = false;
-            }
-        });
-
 
         betPrompt = new Group(tensDigitBG, onesDigitBG, tensDigit, onesDigit, btnTensIncr, btnTensDecr, btnOnesIncr, btnOnesDecr, btnSubmitBet);
         setLayout(tensDigitBG, 470, 325);
@@ -609,12 +635,14 @@ public class GdSlowScene extends GdSlowConsole {
                             if (!isPaused && isPrompted && betPrompt.isVisible() && !outputScroll.isFocused()) {
                                 btnTensIncr.fire();
                             }
+                            System.out.println("CURRENT FOCUS: " + scene.focusOwnerProperty().get());
                         }
 
                         case DOWN -> { // betPrompt (decrement focused digit)
                             if (!isPaused && isPrompted && betPrompt.isVisible() && !outputScroll.isFocused()) {
                                 btnTensDecr.fire();
                             }
+                            System.out.println("CURRENT FOCUS: " + scene.focusOwnerProperty().get());
                         }
 
                         case LEFT -> { // both prompts (move focus leftward)
@@ -667,6 +695,7 @@ public class GdSlowScene extends GdSlowConsole {
                                     }
                                 }
                             }
+                            else if (isPaused && btnQuit.isFocused()) btnQuit.fire();
                         }
 
                         case ENTER -> { // ynPrompt (select focused option), betPrompt (submit)
@@ -687,6 +716,7 @@ public class GdSlowScene extends GdSlowConsole {
                                     }
                                 }
                             }
+                            else if (isPaused && btnQuit.isFocused()) btnQuit.fire();
                         }
                     }
                 }
@@ -819,7 +849,7 @@ public class GdSlowScene extends GdSlowConsole {
     public void gdFancyDelay(TextFlow output, String loadMessage) { // assumes that method is ONLY used for actions needing user input (e.g. roll dice) and then stop.
         Text message = new Text(loadMessage + " ");
         Text loadingIcon = new Text("/");
-        message.setFill(GD_CYAN);
+        message.setFill(GD_CYAN);    
         loadingIcon.setFill(GD_CYAN);
         message.setFont(igiari);
         loadingIcon.setFont(igiari);
@@ -929,7 +959,7 @@ public class GdSlowScene extends GdSlowConsole {
         for (int i = 1; i <= 52; i++) {
             cardFaces[i-1] = retrieveImage("src/com/gdjfx/app/assets/cardfaces/card_" + i + ".png");
         }
-        int faceIndex = ((card.cardSuit.ordinal() * 13) + (card.cardRank.ordinal() + 1)) - 1;
+        int faceIndex = ((card.cardSuit.getValue() * 13) + (card.cardRank.getValue())) - 1;
 
 
         ImageView imgvCard = buildImageView(cardCover, 120, 0, true);
@@ -947,15 +977,13 @@ public class GdSlowScene extends GdSlowConsole {
             }
         });
 
-        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
-            public void handle(KeyEvent ke) {
-                if (ke.getCode() == KeyCode.SPACE && !isCardFlipped.get() && isCardReady.get()) {
-                    playVolumedAudio(sfxCard, sfxVolume);
-                    System.out.println("Card pressed.");
-                    imgvCard.setImage(cardFaces[faceIndex]);
-                    isCardFlipped.set(true);
-                    cardRevealAnim.playFromStart();
-                }
+        root.addEventFilter(KeyEvent.KEY_PRESSED, ke -> {
+            if (ke.getCode() == KeyCode.SPACE && !isCardFlipped.get() && isCardReady.get()) {
+                playVolumedAudio(sfxCard, sfxVolume);
+                System.out.println("Card pressed.");
+                imgvCard.setImage(cardFaces[faceIndex]);
+                isCardFlipped.set(true);
+                cardRevealAnim.playFromStart();
             }
         });
 
@@ -1023,7 +1051,7 @@ public class GdSlowScene extends GdSlowConsole {
             System.err.println("Visualization error: " + e);
         }
 
-        return (card.cardSuit.equals(Card.Suit.DIAMOND) || card.cardSuit.equals(Card.Suit.SPADE) || (card.cardSuit.equals(Card.Suit.HEART) && card.cardRank.ordinal() > 9));
+        return (card.cardSuit.equals(Card.Suit.DIAMOND) || card.cardSuit.equals(Card.Suit.SPADE) || (card.cardSuit.equals(Card.Suit.HEART) && card.cardRank.getValue() > 10));
     }
 
 
@@ -1261,18 +1289,81 @@ public class GdSlowScene extends GdSlowConsole {
     public static Timeline generateColorTransition(Node node, Color startColor, Color endColor, String cssStyle, double duration) {
         Timeline colorAnim = new Timeline();
 
-        for (double i = 0; i < 1.0; i += 0.001) {
+        for (double i = 0; i <= 1.0; i += 0.001) {
             double finalI = i; // Copy i to "effectively final" variable to comply for lambda
-            colorAnim.getKeyFrames().add(new KeyFrame(Duration.seconds(duration * i), e -> node.setStyle(cssStyle + ": " + stringifyAlphaColor(lerpColor(startColor, endColor, finalI)))));
+            colorAnim.getKeyFrames().add(new KeyFrame(Duration.seconds(duration * i), e ->
+                tweakStyle(node, cssStyle, stringifyAlphaColor(lerpColor(startColor, endColor, finalI)))));
         }
 
         return colorAnim;
     }
 
+    public static Timeline generateNumericRuleTransition(Node node, double startVal, double endVal, String cssStyle, String suffix, double duration) {
+        Timeline numAnim = new Timeline();
+
+        for (double i = 0; i <= 1.0; i += 0.001) {
+            double finalI = i; // Copy i to "effectively final" variable to comply for lambda
+            numAnim.getKeyFrames().add(new KeyFrame(Duration.seconds(duration * i), e -> tweakStyle(node, cssStyle,  truncate(startVal + (endVal * finalI), 3) + suffix)));
+            //System.out.println("Time: " + duration * i + "// Style: " +  cssStyle + ": " +  truncate(startVal + (endVal * finalI), 3) + suffix);
+        }
+
+
+        return numAnim;
+    }
+
+    // JavaFX's setStyle method works the same as the 'style' tag property in HTML and overwrites whatever is style is set; thus to add a style a workaround is needed.
+    public static void addStyle(Node node, String style) {
+        String currentStyles = node.getStyle();
+        if (currentStyles.isBlank()) {
+            node.setStyle(style + ";");
+        }
+        else {
+            node.setStyle(currentStyles + style + ";");
+        }
+
+    }
+
+    // Note that addStyle takes a 'style' as input (-fx-sample-property: 0px) while removeStyle takes a 'property' as input (-fx-sample-property).
+    public static void removeStyle(Node node, String property) {
+        String currentStyles = node.getStyle();
+        StringBuilder tweakedStyles = new StringBuilder(currentStyles);
+        tweakedStyles.replace(currentStyles.indexOf(property), currentStyles.substring(currentStyles.indexOf(property)).indexOf(";") + currentStyles.indexOf(property), "");
+
+        node.setStyle(tweakedStyles.toString());
+    }
+
+    // See removeStyle note. This method also will handle situations when the property is not defined yet.
+    public static void tweakStyle (Node node, String property, String newVal) {
+        String currentStyles = node.getStyle();
+        String tweakedStyles;
+        boolean doesNodeContainSeveralProperties = currentStyles.contains(";");
+
+        if (!regexedContains(currentStyles, Pattern.compile(property.replaceAll("-", "\\-")))) {
+            addStyle(node, property + ": " + newVal);
+        }
+
+        // my regex skills suck so hooray for temporary ugly solution!!!!
+        //************ FIXME: stupid [-1, 105] bug here fix it later please
+        if (doesNodeContainSeveralProperties) {
+            StringBuilder sb = new StringBuilder(currentStyles);
+            sb.replace(currentStyles.indexOf(property), currentStyles.substring(currentStyles.indexOf(property)).indexOf(";") + currentStyles.indexOf(property), property + ": " + newVal); // Start/end: Index of property, index of first ; after property
+            tweakedStyles = sb.toString();
+        } else {
+            tweakedStyles = property + ": " + newVal + ";";
+        }
+
+        node.setStyle(tweakedStyles);
+        //System.out.println("Style: " + node.getStyle() + "\n"); DEBUG
+    }
+
+    public static boolean regexedContains(String string, Pattern pattern) {
+        Matcher matcher = pattern.matcher(string);
+        return matcher.find();
+    }
 
 
     // Custom JavaFX node.
-    public class FilledSlider extends Group {
+    public static class FilledSlider extends Group {
         Slider slider = new Slider();
         Rectangle sliderProgress = new Rectangle();
         Rectangle sliderProgressBorder = new Rectangle();

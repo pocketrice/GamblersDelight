@@ -6,27 +6,47 @@ import java.util.Arrays;
 import java.util.stream.DoubleStream;
 
 public class Card {
+
+    // Effective Java #35: instance fields should replace any use of ordinal().
     public enum Suit {
-        CLUB,
-        DIAMOND,
-        HEART,
-        SPADE
+        CLUB(0),
+        DIAMOND(1),
+        HEART(2),
+        SPADE(3);
+
+        private final int suitValue;
+        Suit(int value) {
+            this.suitValue = value;
+        }
+
+        public int getValue() {
+            return suitValue;
+        }
     }
 
     public enum Rank {
-        ACE,
-        TWO,
-        THREE,
-        FOUR,
-        FIVE,
-        SIX,
-        SEVEN,
-        EIGHT,
-        NINE,
-        TEN,
-        JACK,
-        QUEEN,
-        KING
+        ACE(1),
+        TWO(2),
+        THREE(3),
+        FOUR(4),
+        FIVE(5),
+        SIX(6),
+        SEVEN(7),
+        EIGHT(8),
+        NINE(9),
+        TEN(10),
+        JACK(11),
+        QUEEN(12),
+        KING(13);
+
+        private final int rankValue;
+        Rank(int value) {
+            this.rankValue = value;
+        }
+
+        public int getValue() {
+            return rankValue;
+        }
     }
 
     public Suit cardSuit;
@@ -36,13 +56,13 @@ public class Card {
     public Card() { // "Get a random card" -- to actually make sure they match the confines of a real deck, use the "drawCard" method in cardDeck
         cardSuit = weightedRandom(Suit.values(), new double[4], true);
         cardRank = weightedRandom(Rank.values(), new double[13], true);
-        cardValue = cardRank.ordinal() + 1;
+        cardValue = cardRank.rankValue;
     }
 
-    public Card(Suit cs, int cv) {
-        cardSuit = cs;
-        cardValue = cv;
-        cardRank = Rank.values()[cv-1];
+    public Card(Suit suit, int value) {
+        cardSuit = suit;
+        cardValue = value;
+        cardRank = Rank.values()[value-1];
     }
 
     // Randomly select a choice out of a given pool either equally or individually weighted.
@@ -68,6 +88,6 @@ public class Card {
                 rng -= weights[i];
         }
 
-        return null;
+        return choices[choices.length-1];
     }
 }
