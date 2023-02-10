@@ -116,13 +116,11 @@ public class Stepper extends Group implements CustomNode, Focusable {
         setPalette(paletteColor);
 
         digitBG = builder.digitBG;
-        digitBG.setFill(palette[0]);
         value = builder.value;
         increment = builder.increment;
 
         digit = builder.digit;
-        tweakStyle(digit, "-fx-font-size", "30");
-        digit.setFill(palette[3]);
+        addStyle(digit, "-fx-font-size: 30");
         digit.setFont(igiari);
 
         bounds = builder.bounds;
@@ -130,20 +128,16 @@ public class Stepper extends Group implements CustomNode, Focusable {
 
         btnIncr = builder.btnIncr;
         btnIncr.setFocusTraversable(false);
-        btnIncr.setStyle("-fx-background-color: " + stringifyAlphaColor(palette[1]));
-        btnIncr.setTextFill(palette[2]);
         btnIncr.setFont(igiari);
 
         btnDecr = builder.btnDecr;
         btnDecr.setFocusTraversable(false);
-        btnDecr.setStyle("-fx-background-color: " + stringifyAlphaColor(palette[1]));
-        btnDecr.setTextFill(palette[2]);
         btnDecr.setFont(igiari);
 
         // Apply palette
         digitBG.setFill(palette[0]);
-        tweakStyle(btnIncr, "-fx-background-color", stringifyAlphaColor(palette[1]));
-        tweakStyle(btnDecr, "-fx-background-color", stringifyAlphaColor(palette[1]));
+        addStyle(btnIncr, "-fx-background-color: " + stringifyAlphaColor(palette[1]));
+        addStyle(btnDecr, "-fx-background-color: " + stringifyAlphaColor(palette[1]));
         btnIncr.setTextFill(palette[2]);
         btnDecr.setTextFill(palette[2]);
         digit.setFill(palette[3]);

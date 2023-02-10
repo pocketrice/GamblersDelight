@@ -1,6 +1,7 @@
 // Lucas Xie - P5 AP CSA - 1/26/23 - GDJFX
 package com.gdjfx.cli;
 
+import com.gdjfx.AnsiCode;
 import com.gdjfx.Card;
 import com.gdjfx.Dice;
 import org.jetbrains.annotations.NotNull;
@@ -13,18 +14,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.gdjfx.AnsiCode.*;
 import static com.gdjfx.Card.Suit;
 import static com.gdjfx.cli.ProgramConsole.prompt;
 
 public class GdSlowConsole implements ModeConsole {
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
-
     private final int TOTAL_ROUNDS = 10;
     private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
     private long balance, netBalance, bet;
@@ -325,7 +319,7 @@ public class GdSlowConsole implements ModeConsole {
     // @return monetary-parsed string
     public static String monetaryParse(double num, boolean includeDecimal, boolean includeExplicitSign, boolean includeColor) { // BUG: for some reason this doesn't work 100% (see 'expected value' on occassions)
         // TODO: refactor to be more readable / concise (StringBuilder?)
-        String[] monetaryColors = (includeColor) ? new String[]{ANSI_GREEN, ANSI_BLUE, ANSI_RED} : new String[]{"","",""};
+        AnsiCode[] monetaryColors = (includeColor) ? new AnsiCode[]{ANSI_GREEN, ANSI_BLUE, ANSI_RED} : new AnsiCode[]{ANSI_BLACK, ANSI_BLACK, ANSI_BLACK};
 
         String properTruncString;
         if (includeDecimal) {

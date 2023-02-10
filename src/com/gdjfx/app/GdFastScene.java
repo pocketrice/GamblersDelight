@@ -149,6 +149,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
     // @param N/A
     // @return N/A
     public void initializeRoot() throws FileNotFoundException {
+        root = new Pane();
         isSceneLoaded = true;
         loadColorPresets();
 
@@ -537,163 +538,6 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
                 }
             });
         });
-/*
-        Rectangle thousandsDigitBG = new Rectangle(30,70,Color.valueOf("#9e8fb590"));
-        Rectangle hundredsDigitBG = new Rectangle(30,70,Color.valueOf("#9e8fb590"));
-        Rectangle tensDigitBG = new Rectangle(30,70,Color.valueOf("#9e8fb590"));
-        Rectangle onesDigitBG = new Rectangle(30,70,Color.valueOf("#9e8fb590"));
-
-        Text thousandsDigit = new Text("" + thousandsValue);
-        thousandsDigit.setFont(igiari);
-        thousandsDigit.setStyle("-fx-font-size: 30;");
-        thousandsDigit.setFill(Color.valueOf("#392e44"));
-        Text hundredsDigit = new Text("" + hundredsValue);
-        hundredsDigit.setFont(igiari);
-        hundredsDigit.setStyle("-fx-font-size: 30;");
-        hundredsDigit.setFill(Color.valueOf("#392e44"));
-        Text tensDigit = new Text("" + tensValue);
-        tensDigit.setFont(igiari);
-        tensDigit.setStyle("-fx-font-size: 30;");
-        tensDigit.setFill(Color.valueOf("#392e44"));
-        Text onesDigit = new Text("" + onesValue);
-        onesDigit.setFont(igiari);
-        onesDigit.setStyle("-fx-font-size: 30;");
-        onesDigit.setFill(Color.valueOf("#392e44"));
-
-        Button btnThousandsIncr = new Button("+");
-        btnThousandsIncr.setFocusTraversable(false);
-        btnThousandsIncr.setFont(igiari);
-        btnThousandsIncr.setPrefSize(30, 8);
-        btnThousandsIncr.setStyle("-fx-background-color: #b5aac6C0");
-        btnThousandsIncr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                thousandsValue = (thousandsValue + 1 > 9) ? 0 : thousandsValue + 1;
-                thousandsDigit.setText("" + thousandsValue);
-            }
-        });
-
-        Button btnThousandsDecr = new Button("-");
-        btnThousandsDecr.setFocusTraversable(false);
-        btnThousandsDecr.setFont(igiari);
-        btnThousandsDecr.setPrefSize(30, 8);
-        btnThousandsDecr.setStyle("-fx-background-color: #b5aac6C0");
-
-        btnThousandsDecr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                thousandsValue = (thousandsValue - 1 < 0) ? 9 : thousandsValue - 1;
-                thousandsDigit.setText("" + thousandsValue);
-            }
-        });
-
-
-
-        Button btnHundredsIncr = new Button("+");
-        btnHundredsIncr.setFocusTraversable(false);
-        btnHundredsIncr.setFont(igiari);
-        btnHundredsIncr.setPrefSize(30, 8);
-        btnHundredsIncr.setStyle("-fx-background-color: #b5aac6C0");
-        btnHundredsIncr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                hundredsValue = (hundredsValue + 1 > 9) ? 0 : hundredsValue + 1;
-                hundredsDigit.setText("" + hundredsValue);
-            }
-        });
-
-        Button btnHundredsDecr = new Button("-");
-        btnHundredsDecr.setFocusTraversable(false);
-        btnHundredsDecr.setFont(igiari);
-        btnHundredsDecr.setPrefSize(30, 8);
-        btnHundredsDecr.setStyle("-fx-background-color: #b5aac6C0");
-
-        btnHundredsDecr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                hundredsValue = (hundredsValue - 1 < 0) ? 9 : hundredsValue - 1;
-                hundredsDigit.setText("" + hundredsValue);
-            }
-        });
-
-
-        Button btnTensIncr = new Button("+");
-        btnTensIncr.setFocusTraversable(false);
-        btnTensIncr.setFont(igiari);
-        btnTensIncr.setPrefSize(30, 8);
-        btnTensIncr.setStyle("-fx-background-color: #b5aac6C0");
-        btnTensIncr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                tensValue = (tensValue + 1 > 9) ? 0 : tensValue + 1;
-                tensDigit.setText("" + tensValue);
-            }
-        });
-
-        Button btnTensDecr = new Button("-");
-        btnTensDecr.setFocusTraversable(false);
-        btnTensDecr.setFont(igiari);
-        btnTensDecr.setPrefSize(30, 8);
-        btnTensDecr.setStyle("-fx-background-color: #b5aac6C0");
-
-        btnTensDecr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                tensValue = (tensValue - 1 < 0) ? 9 : tensValue - 1;
-                tensDigit.setText("" + tensValue);
-            }
-        });
-
-        Button btnOnesIncr = new Button("+");
-        btnOnesIncr.setFocusTraversable(false);
-        btnOnesIncr.setFont(igiari);
-        btnOnesIncr.setPrefSize(30, 8);
-        btnOnesIncr.setStyle("-fx-background-color: #b5aac6C0");
-        btnOnesIncr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                onesValue = (onesValue + 1 > 9) ? 0 : onesValue + 1;
-                onesDigit.setText("" + onesValue);
-            }
-        });
-
-        Button btnOnesDecr = new Button("-");
-        btnOnesDecr.setFocusTraversable(false);
-        btnOnesDecr.setFont(igiari);
-        btnOnesDecr.setPrefSize(30, 8);
-        btnOnesDecr.setStyle("-fx-background-color: #b5aac6C0");
-
-        btnOnesDecr.setOnAction(actionEvent -> {
-            if (isPrompted) {
-                playVolumedAudio(sfxDollop, sfxVolume);
-                onesValue = (onesValue - 1 < 0) ? 9 : onesValue - 1;
-                onesDigit.setText("" + onesValue);
-            }
-        });
-
-
-        trialPrompt = new Group(thousandsDigitBG, hundredsDigitBG, tensDigitBG, onesDigitBG, thousandsDigit, hundredsDigit, tensDigit, onesDigit, btnThousandsIncr, btnThousandsDecr, btnHundredsIncr, btnHundredsDecr, btnTensIncr, btnTensDecr, btnOnesIncr, btnOnesDecr, btnSubmitBet);
-        setLayout(thousandsDigitBG, 420, 325);
-        setLayout(hundredsDigitBG,455, 325);
-        setLayout(tensDigitBG, 490, 325);
-        setLayout(onesDigitBG,525, 325);
-
-        setLayout(thousandsDigit,430,378);
-        setLayout(hundredsDigit,465,378);
-        setLayout(tensDigit,500,378);
-        setLayout(onesDigit,535,378);
-
-        setLayout(btnThousandsIncr,420,325);
-        setLayout(btnThousandsDecr, 420, 385);
-        setLayout(btnHundredsIncr, 455,325);
-        setLayout(btnHundredsDecr,455,385);
-        setLayout(btnTensIncr,490,325);
-        setLayout(btnTensDecr, 490, 385);
-        setLayout(btnOnesIncr, 525,325);
-        setLayout(btnOnesDecr,525,385);
-        setLayout(btnSubmitBet, 590,360);*/
-
-
 
         promptBoxGroup = new Group(promptBoxBG, promptBarBG, promptBarText, promptBarArrow1, promptBarArrow2, trialPromptGroup, ynPromptGroup);
         setLayout(promptBoxGroup, 0, 200);
@@ -715,7 +559,6 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
         DropShadow velvetShadow = new DropShadow(BlurType.GAUSSIAN, Color.valueOf("#262221D0"), 10, 0, 4, 4);
         imgvVelvet.setEffect(velvetShadow);
 
-        root = new Pane();
         root.setBackground(new Background(new BackgroundImage(retrieveImage("src/com/gdjfx/app/assets/fmbackdrop_bl.jpg"), BackgroundRepeat.REPEAT, BackgroundRepeat.REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
         root.getChildren().add(imgvVelvet);
         setLayout(imgvVelvet, -80, 120);

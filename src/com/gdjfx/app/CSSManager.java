@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import static com.gdjfx.app.GdSlowScene.regexedContains;
 import static com.gdjfx.cli.GdSlowConsole.truncate;
+import static com.gdjfx.AnsiCode.*;
 
 public class CSSManager {
     public static String stringifyOpaqueColor(Color color) {
@@ -125,8 +126,13 @@ public class CSSManager {
         }
 
         node.setStyle(tweakedStyles);
-        //System.out.println("Style: " + node.getStyle() + "\n"); DEBUG
     }
 
     // CSS checker function -- sometimes JavaFX won't spit out info about whether or not css was valid. Write method that prints all css properties for an object.
+    public static void debugCss(Node node) {
+        System.out.println(ANSI_BLUE + "CSS Debug Report for node " + node.toString());
+        System.out.println("================================================\n\n");
+        System.out.println("Styles: " + node.getStyle());
+        System.out.println("\n\n================================================\n\n\n\n" + ANSI_RESET);
+    }
 }
