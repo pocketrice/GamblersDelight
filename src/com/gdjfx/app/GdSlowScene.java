@@ -18,7 +18,6 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -50,20 +49,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.gdjfx.app.ProgramApplet.*;
+import static com.gdjfx.app.CSSManager.*;
 
-public class GdSlowScene extends GdSlowConsole {
+public class GdSlowScene extends GdSlowConsole implements ModeScene {
     Pane root;
     Group ynPrompt, betPrompt, promptBox, pauseGroup;
     Rectangle obfPanel;
     TextFlow outputText;
     Set<Node> roundAssets = new HashSet<>();
-    boolean isPaused = false, isAttemptingQuadRound = false, isGameStarted = false, isPrompted = false, isStartLoading = false;
+    boolean isPaused = false, isAttemptingQuadRound = false, isGameStarted = false, isPrompted = false, isStartLoading = false, isSceneLoaded = false;
 
     Font suburga = Font.loadFont("file:src/com/gdjfx/app/assets/suburga.otf", 20);
     Font attorneyButtons = Font.loadFont("file:src/com/gdjfx/app/assets/attorneybuttons.ttf", 20);
     Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 12);
 
-    static double bgmVolume = 0, sfxVolume = 0.15; // <- Default volume values.
+    static double bgmVolume = 0, sfxVolume = 0.5; // <- Default volume values.
     Media bgmConfrontModerato = new Media(new File("src/com/gdjfx/app/assets/audio/bgm/confrontation_moderato.mp3").toURI().toString());
     MediaPlayer bgmPlayer = buildAudio(bgmConfrontModerato, bgmVolume, MediaPlayer.INDEFINITE);
     AudioClip sfxNewEvidence = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/new_evidence.wav").toURI().toString());
@@ -157,6 +157,7 @@ public class GdSlowScene extends GdSlowConsole {
     // @param N/A
     // @return N/A
     public void initializeRoot() throws FileNotFoundException {
+        isSceneLoaded = true; // Used to catch situations where the scene is unloaded, but Timelines are still running (SFX, flags, etc.)
         loadColorPresets();
 
         obfPanel = new Rectangle(750, 500, Color.valueOf("#1a171eC0"));
@@ -208,19 +209,21 @@ public class GdSlowScene extends GdSlowConsole {
         addStyle(btnQuit, "-fx-border-radius: 5px");
         addStyle(btnQuit, "-fx-border-style: solid");
         addStyle(btnQuit, "-fx-background-color: #b2b8daD0");
+        addStyle(btnQuit, "-fx-border-width: 0px");
         setLayout(btnQuit, 250, 290);
         btnQuit.setVisible(false);
         btnQuit.setOnAction(actionEvent -> {
             playVolumedAudio(sfxSelectLong, sfxVolume);
             bgmPlayer.stop();
+            isSceneLoaded = false;
             changeRoot(ProgramApplet.root);
             resetMarquee();
             activeBtnIndex = -1;
             updateSelections();
         });
-        Timeline btnQuitColorTransition = generateColorTransition(btnQuit, Color.web("#b2b8daD0"), Color.web("#afc5ffC0"), "-fx-background-color", 0.3);
-        Timeline btnQuitTextColorTransition = generateColorTransition(btnQuit, Color.web("#4d3061"), Color.web("#303a79"), "-fx-text-fill", 0.3);
-        Timeline btnQuitBorderTransition = generateNumericRuleTransition(btnQuit, 0, 2, "-fx-border-width", "px", 0.2);
+        Timeline btnQuitColorTransition = generateColorTransition(Color.web("#b2b8daD0"), Color.web("#afc5ffC0"), List.of("-fx-background-color"), 0.3, btnQuit);
+        Timeline btnQuitTextColorTransition = generateColorTransition(Color.web("#4d3061"), Color.web("#303a79"), List.of("-fx-text-fill"), 0.3, btnQuit);
+        Timeline btnQuitBorderTransition = generateNumericRuleTransition(0, 2, List.of("-fx-border-width"), "px", 0.2, btnQuit);
 
         btnQuit.pressedProperty().addListener((observable, oldVal, isPressed) -> {
             if (isPressed) {
@@ -327,7 +330,7 @@ public class GdSlowScene extends GdSlowConsole {
 
         Group pauseMenu = new Group(pauseText, btnQuit, bgmSettings, sfxSettings);
 
-        // MISPLACED
+        // MISPLACED - NOT OPTIMAL
         Button btnSubmitBet = new Button("Submit");
         btnSubmitBet.setFont(igiari);
         btnSubmitBet.setPrefSize(60, 20);
@@ -364,8 +367,8 @@ public class GdSlowScene extends GdSlowConsole {
                 pauseMenu.toFront();
                 bgmSlider.slider.requestFocus();
                 btnSubmitBet.setFocusTraversable(false);
-
-            } else {
+            }
+            else {
                 bgmPlayer.play();
                 isPaused = false;
                 pauseText.setOpacity(0);
@@ -430,7 +433,7 @@ public class GdSlowScene extends GdSlowConsole {
             }
         });
 
-        Timeline btnYesColorTransition = generateColorTransition(btnYes, Color.web("#958cadD0"), Color.web("#cec4edD0"), "-fx-background-color", 0.7);
+        Timeline btnYesColorTransition = generateColorTransition(Color.web("#958cadD0"), Color.web("#cec4edD0"), List.of("-fx-background-color"), 0.7, btnYes);
 
         btnYes.hoverProperty().addListener((observable, oldVal, isHovered) -> {
             root.requestFocus();
@@ -471,7 +474,7 @@ public class GdSlowScene extends GdSlowConsole {
             }
         });
 
-        Timeline btnNoColorTransition = generateColorTransition(btnNo, Color.web("#958cadD0"), Color.web("#cec4edD0"), "-fx-background-color", 0.7);
+        Timeline btnNoColorTransition = generateColorTransition(Color.web("#958cadD0"), Color.web("#cec4edD0"), List.of("-fx-background-color"), 0.7, btnNo);
 
         btnNo.hoverProperty().addListener((observable, oldVal, isHovered) -> {
             root.requestFocus();
@@ -849,7 +852,7 @@ public class GdSlowScene extends GdSlowConsole {
     public void gdFancyDelay(TextFlow output, String loadMessage) { // assumes that method is ONLY used for actions needing user input (e.g. roll dice) and then stop.
         Text message = new Text(loadMessage + " ");
         Text loadingIcon = new Text("/");
-        message.setFill(GD_CYAN);    
+        message.setFill(GD_CYAN);
         loadingIcon.setFill(GD_CYAN);
         message.setFont(igiari);
         loadingIcon.setFont(igiari);
@@ -919,15 +922,23 @@ public class GdSlowScene extends GdSlowConsole {
 
         Timeline visualizeDiceAnim = new Timeline(
                 new KeyFrame(Duration.seconds(5), e -> {
-                    setLayout(imgvDiceA, proximityRandom(30,30,30), proximityRandom(260,20,20));
-                    imgvDiceA.setRotate(proximityRandom(50,30,30));
+                    if (isSceneLoaded) {
+                        setLayout(imgvDiceA, proximityRandom(30, 30, 30), proximityRandom(260, 20, 20));
+                        imgvDiceA.setRotate(proximityRandom(50, 30, 30));
+                    }
                 }),
                 new KeyFrame(Duration.seconds(6), e -> {
-                    setLayout(imgvDiceB, proximityRandom(120,30,30),proximityRandom(190,30,30));
-                    imgvDiceB.setRotate(proximityRandom(-40,30,30));
+                    if (isSceneLoaded) {
+                        setLayout(imgvDiceB, proximityRandom(120, 30, 30), proximityRandom(190, 30, 30));
+                        imgvDiceB.setRotate(proximityRandom(-40, 30, 30));
+                    }
                 }),
-                new KeyFrame(Duration.seconds(6.2), e -> playVolumedAudio(sfxDiceroll, sfxVolume)),
-                new KeyFrame(Duration.seconds(8), e -> resume())
+                new KeyFrame(Duration.seconds(6.2), e -> {
+                    if (isSceneLoaded) playVolumedAudio(sfxDiceroll, sfxVolume);
+                }),
+
+                new KeyFrame(Duration.seconds(8), e -> { if (isSceneLoaded) resume();
+                })
         );
 
         root.getChildren().remove(pauseGroup);
@@ -964,7 +975,9 @@ public class GdSlowScene extends GdSlowConsole {
 
         ImageView imgvCard = buildImageView(cardCover, 120, 0, true);
         Timeline cardRevealAnim = new Timeline(
-                new KeyFrame(Duration.seconds(2), e -> resume())
+                new KeyFrame(Duration.seconds(2), e -> {
+                    if (isSceneLoaded) resume();
+                })
         );
 
         imgvCard.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
@@ -1003,10 +1016,12 @@ public class GdSlowScene extends GdSlowConsole {
 
         Timeline visualizeCardAnim = new Timeline(
                 new KeyFrame(Duration.seconds(4), e -> {
-                    setLayout(imgvCard, proximityRandom(80,30,30), proximityRandom(230,30,30));
-                    imgvCard.setRotate(proximityRandom(25,20,20));
+                    if (isSceneLoaded) {
+                        setLayout(imgvCard, proximityRandom(80, 30, 30), proximityRandom(230, 30, 30));
+                        imgvCard.setRotate(proximityRandom(25, 20, 20));
+                    }
                 }),
-                new KeyFrame(Duration.seconds(5), e -> isCardReady.set(true))
+                new KeyFrame(Duration.seconds(5), e -> { if (isSceneLoaded) isCardReady.set(true); })
         );
 
         visualizeCardAnim.play();
@@ -1248,211 +1263,13 @@ public class GdSlowScene extends GdSlowConsole {
         collection.addAll(Arrays.asList(items));
     }
 
-    public static String stringifyOpaqueColor(Color color) {
-        return "#" + color.toString().substring(2, color.toString().length()-2);
-    }
-
-    public static String stringifyAlphaColor(Color color) {
-        return "#" + color.toString().substring(2);
-    }
-
     public static void playVolumedAudio(AudioClip audioClip, double volume) {
         audioClip.setVolume(volume);
         audioClip.play();
     }
 
-    // Note: this only returns one lerped value on the entire "gradient continuum" (ooh, fancy!). This is to generify/allow for more use-cases. See generateColorTransition for an implementation of the full gradient.
-    public static Color lerpColor(Color startColor, Color endColor, double value) {
-        double[] rgbSc = {startColor.getRed(), startColor.getGreen(), startColor.getBlue(), startColor.getOpacity()};
-        double[] rgbEc = {endColor.getRed(), endColor.getGreen(), endColor.getBlue(), endColor.getOpacity()};
-        return new Color(
-                rgbSc[0] + (rgbEc[0] - rgbSc[0]) * value,
-                rgbSc[1] + (rgbEc[1] - rgbSc[1]) * value,
-                rgbSc[2] + (rgbEc[2] - rgbSc[2]) * value,
-                rgbSc[3] + (rgbEc[3] - rgbSc[3]) * value);
-    }
-
-    /*
-    ** Implement event handlers like so:
-
-     node.handlerProperty().addListener((observable, oldVal, isPropertyTrue) -> {
-            if (isPropertyTrue) {
-                nodeColorTransition.setRate(1);
-                nodeColorTransition.play();
-            } else {
-                nodeColorTransition.setRate(-1);
-                nodeColorTransition.play();
-            }
-        });
-     */
-
-    public static Timeline generateColorTransition(Node node, Color startColor, Color endColor, String cssStyle, double duration) {
-        Timeline colorAnim = new Timeline();
-
-        for (double i = 0; i <= 1.0; i += 0.001) {
-            double finalI = i; // Copy i to "effectively final" variable to comply for lambda
-            colorAnim.getKeyFrames().add(new KeyFrame(Duration.seconds(duration * i), e ->
-                tweakStyle(node, cssStyle, stringifyAlphaColor(lerpColor(startColor, endColor, finalI)))));
-        }
-
-        return colorAnim;
-    }
-
-    public static Timeline generateNumericRuleTransition(Node node, double startVal, double endVal, String cssStyle, String suffix, double duration) {
-        Timeline numAnim = new Timeline();
-
-        for (double i = 0; i <= 1.0; i += 0.001) {
-            double finalI = i; // Copy i to "effectively final" variable to comply for lambda
-            numAnim.getKeyFrames().add(new KeyFrame(Duration.seconds(duration * i), e -> tweakStyle(node, cssStyle,  truncate(startVal + (endVal * finalI), 3) + suffix)));
-            //System.out.println("Time: " + duration * i + "// Style: " +  cssStyle + ": " +  truncate(startVal + (endVal * finalI), 3) + suffix);
-        }
-
-
-        return numAnim;
-    }
-
-    // JavaFX's setStyle method works the same as the 'style' tag property in HTML and overwrites whatever is style is set; thus to add a style a workaround is needed.
-    public static void addStyle(Node node, String style) {
-        String currentStyles = node.getStyle();
-        if (currentStyles.isBlank()) {
-            node.setStyle(style + ";");
-        }
-        else {
-            node.setStyle(currentStyles + style + ";");
-        }
-
-    }
-
-    // Note that addStyle takes a 'style' as input (-fx-sample-property: 0px) while removeStyle takes a 'property' as input (-fx-sample-property).
-    public static void removeStyle(Node node, String property) {
-        String currentStyles = node.getStyle();
-        StringBuilder tweakedStyles = new StringBuilder(currentStyles);
-        tweakedStyles.replace(currentStyles.indexOf(property), currentStyles.substring(currentStyles.indexOf(property)).indexOf(";") + currentStyles.indexOf(property), "");
-
-        node.setStyle(tweakedStyles.toString());
-    }
-
-    // See removeStyle note. This method also will handle situations when the property is not defined yet.
-    public static void tweakStyle (Node node, String property, String newVal) {
-        String currentStyles = node.getStyle();
-        String tweakedStyles;
-        boolean doesNodeContainSeveralProperties = currentStyles.contains(";");
-
-        if (!regexedContains(currentStyles, Pattern.compile(property.replaceAll("-", "\\-")))) {
-            addStyle(node, property + ": " + newVal);
-        }
-
-        // my regex skills suck so hooray for temporary ugly solution!!!!
-        //************ FIXME: stupid [-1, 105] bug here fix it later please
-        if (doesNodeContainSeveralProperties) {
-            StringBuilder sb = new StringBuilder(currentStyles);
-            sb.replace(currentStyles.indexOf(property), currentStyles.substring(currentStyles.indexOf(property)).indexOf(";") + currentStyles.indexOf(property), property + ": " + newVal); // Start/end: Index of property, index of first ; after property
-            tweakedStyles = sb.toString();
-        } else {
-            tweakedStyles = property + ": " + newVal + ";";
-        }
-
-        node.setStyle(tweakedStyles);
-        //System.out.println("Style: " + node.getStyle() + "\n"); DEBUG
-    }
-
     public static boolean regexedContains(String string, Pattern pattern) {
         Matcher matcher = pattern.matcher(string);
         return matcher.find();
-    }
-
-
-    // Custom JavaFX node.
-    public static class FilledSlider extends Group {
-        Slider slider = new Slider();
-        Rectangle sliderProgress = new Rectangle();
-        Rectangle sliderProgressBorder = new Rectangle();
-
-        public FilledSlider() {
-            scene.getStylesheets().add("com/gdjfx/app/main.css");
-            slider.setId("filled-slider"); // ** Requires #color-slider .track { -fx-background-color: transparent; } in main.css
-            sliderProgress.heightProperty().bind(slider.heightProperty().subtract(8));
-            sliderProgress.widthProperty().bind(slider.widthProperty());
-            sliderProgress.setFill(Color.web("#969696"));
-
-            // Dynamic slider thumb focus/faint focus colors (#filled-slider .thumb) - credit to https://stackoverflow.com/questions/50552728/dynamically-change-javafx-css-property
-            slider.setStyle("-dynamic-focus-color: derive(#969696, -40%)");
-            slider.setStyle("-dynamic-faint-focus-color: derive(#969696A0, -40%)");
-
-            sliderProgressBorder.heightProperty().bind(slider.heightProperty().subtract(5));
-            sliderProgressBorder.widthProperty().bind(slider.widthProperty().add(3));
-            sliderProgressBorder.setFill(Color.web("#969696").deriveColor(0, 0, -40, 0));
-
-            sliderProgress.setArcHeight(15);
-            sliderProgress.setArcWidth(10);
-            sliderProgressBorder.setArcHeight(15);
-            sliderProgressBorder.setArcWidth(10);
-
-
-            // Update progress/progress border based on default volume value.
-            sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, #2D819D %d%%, #969696 %d%%);",
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(#2D819D, -40%%) %d%%, derive(#969696, -40%%) %d%%);",
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            // Update progress/progress border on change.
-            slider.valueProperty().addListener((observableValue, oldVal, newVal) -> {
-                sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, #2D819D %d%%, #969696 %d%%);",
-                        newVal.intValue(), newVal.intValue()));
-
-                sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(#2D819D, -40%%) %d%%, derive(#969696, -40%%) %d%%);",
-                        newVal.intValue(), newVal.intValue()));
-            });
-            this.getChildren().addAll(sliderProgressBorder, sliderProgress, slider);
-        }
-        public FilledSlider(Color filledColor, Color unfilledColor)  {
-            scene.getStylesheets().add("com/gdjfx/app/main.css");
-            slider.setId("filled-slider"); // ** Requires #color-slider .track { -fx-background-color: transparent; } in main.css
-            sliderProgress.heightProperty().bind(slider.heightProperty().subtract(8));
-            sliderProgress.widthProperty().bind(slider.widthProperty());
-            sliderProgress.setFill(filledColor);
-
-            // Dynamic slider thumb focus/faint focus colors (#filled-slider .thumb)
-            slider.setStyle("-dynamic-focus-color: derive(" + stringifyOpaqueColor(filledColor) + ", -40%)");
-            slider.setStyle("-dynamic-faint-focus-color: derive(" + stringifyOpaqueColor(filledColor) + "A0, -40%)");
-
-            sliderProgressBorder.heightProperty().bind(slider.heightProperty().subtract(5));
-            sliderProgressBorder.widthProperty().bind(slider.widthProperty().add(3));
-            sliderProgressBorder.setFill(filledColor.deriveColor(0, 0, -40, 0));
-
-            sliderProgress.setArcHeight(15);
-            sliderProgress.setArcWidth(10);
-            sliderProgressBorder.setArcHeight(15);
-            sliderProgressBorder.setArcWidth(10);
-
-
-            // Update progress/progress border based on default volume value.
-            sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(filledColor) + " %d%%, " + stringifyOpaqueColor(unfilledColor) + " %d%%);", // Remove "0x" from start of Color string.
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(" + stringifyOpaqueColor(filledColor) + ", -40%%) %d%%, derive(" + stringifyOpaqueColor(unfilledColor) + ", -40%%) %d%%);", // Remove "0x" from start of Color string.
-                    (int) slider.getValue(), (int) slider.getValue()));
-
-            // Update progress/progress border on change.
-            slider.valueProperty().addListener((observableValue, oldVal, newVal) -> {
-                sliderProgress.setStyle(String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(filledColor) + " %d%%, " + stringifyOpaqueColor(unfilledColor) + " %d%%);", // Remove "0x" from start of Color string.
-                        newVal.intValue(), newVal.intValue()));
-
-                sliderProgressBorder.setStyle(String.format("-fx-fill: linear-gradient(to right, derive(" + stringifyOpaqueColor(filledColor) + ", -40%%) %d%%, derive(" + stringifyOpaqueColor(unfilledColor) + ", -40%%) %d%%);", // Remove "0x" from start of Color string.
-                        newVal.intValue(), newVal.intValue()));
-            });
-
-            this.getChildren().addAll(sliderProgressBorder, sliderProgress, slider);
-        }
-
-        public void setLayout(double layoutX, double layoutY) { // Call this in place of the general setLayout method.
-            slider.setLayoutX(layoutX);
-            sliderProgress.setLayoutX(layoutX);
-            sliderProgressBorder.setLayoutX(layoutX - 1.6);
-            slider.setLayoutY(layoutY);
-            sliderProgress.setLayoutY(layoutY + 3.5);
-            sliderProgressBorder.setLayoutY(layoutY + 2.2);
-        }
     }
 }

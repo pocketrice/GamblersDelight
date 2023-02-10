@@ -5,17 +5,18 @@ import com.gdjfx.Card;
 import com.gdjfx.Dice;
 import org.jetbrains.annotations.NotNull;
 
-import static com.gdjfx.Card.Suit;
-import static com.gdjfx.cli.ProgramConsole.prompt;
-
-import java.io.*;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-public class GdSlowConsole {
+
+import static com.gdjfx.Card.Suit;
+import static com.gdjfx.cli.ProgramConsole.prompt;
+
+public class GdSlowConsole implements ModeConsole {
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";

@@ -18,7 +18,7 @@ public class Dice { // todo: might need to store position of dice (rotation, loc
     }
 
     public Dice(int[] sv) {
-        assert (Arrays.stream(sv).min().getAsInt() > 0) : "Error: Dice object of name " + this + " has invalid side values; found minimum of " + Arrays.stream(sv).min() + " is less than 0";
+        assert (Arrays.stream(sv).min().getAsInt() > 0) : "Error: Dice object of name " + this + " has invalid side values; the found minimum of " + Arrays.stream(sv).min() + " is less than 0";
         sideValues = sv;
         sideCount = sv.length;
         selectedValue = -1; // 2nd assertion guarantees no negatives; this allows for safely checking if selectedValue was not set yet.

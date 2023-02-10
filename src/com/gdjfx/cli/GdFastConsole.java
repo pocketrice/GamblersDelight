@@ -7,7 +7,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GdFastConsole extends GdSlowConsole {
+public class GdFastConsole extends GdSlowConsole implements ModeConsole {
     private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
     private long balance, netBalance, bet, trialCount;
     private double totalWinRate, totalWinLoseRatio, doubleWinRate, quadWinRate, expectedValue;
