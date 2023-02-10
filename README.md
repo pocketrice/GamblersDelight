@@ -8,6 +8,4 @@
 _Mean green gambling machine running on the power of coffee beans and JavaFX._
 <br><br>
 
-> Execute program (app or CLI) at com.gdjfx/app/ProgramApplet or com.gdjfx/cli/ProgramConsole. Requires JavaFX. 
-
-> Check _CREDITS.md_ for external libraries and resources info.
+> Execute program (app or CLI) at com.gdjfx/app/ProgramApplet or com.gdjfx/cli/ProgramConsole. Requires JavaFX.<br>Check _CREDITS.md_ for external libraries and resources info.
