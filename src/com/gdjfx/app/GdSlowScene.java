@@ -97,9 +97,10 @@ public class GdSlowScene extends GdSlowConsole implements ModeScene {
 
     private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses, tensValueBet = 1, onesValueBet = 0;
     private long balance, netBalance, bet;
-    private List<Card> cardHistory = new ArrayList<>();
-    private List<Integer> diceHistory = new ArrayList<>();
-    private List<Integer> optDiceHistory = new ArrayList<>();
+
+    private final List<Card> cardHistory = new ArrayList<>();
+    private final List<Integer> diceHistory = new ArrayList<>();
+    private final List<Integer> optDiceHistory = new ArrayList<>();
 
 
     public GdSlowScene() {
@@ -254,7 +255,7 @@ public class GdSlowScene extends GdSlowConsole implements ModeScene {
         bgmSlCaption.setStyle("-fx-font-size:14");
         bgmSlCaption.setFill(Color.valueOf("#c2d9d6"));
 
-        FilledSlider bgmSlider = new FilledSlider(Color.web("#709e98"), Color.web("#b4d2c9"));
+        FilledSlider bgmSlider = new FilledSlider(Color.web("#709e98"));
         bgmSlider.slider.setValue((bgmVolume * 100) / 0.15);
         Text bgmSlVolNum = new Text((int) bgmSlider.slider.getValue() + "%");
         bgmSlider.slider.valueProperty().addListener((obs, oldValue, newValue) -> {
@@ -277,7 +278,7 @@ public class GdSlowScene extends GdSlowConsole implements ModeScene {
         setLayout(bgmSlVolNum, 400, 188);
 
 
-        FilledSlider sfxSlider = new FilledSlider(Color.web("#76709e"), Color.web("#b7b4d2"));
+        FilledSlider sfxSlider = new FilledSlider(Color.web("#76709e"));
         sfxSlider.slider.setValue((sfxVolume * 100) / 0.8);
         Text sfxSlVolNum = new Text((int) sfxSlider.slider.getValue() + "%");
         sfxSlVolNum.setFont(igiari);
@@ -1139,6 +1140,7 @@ public class GdSlowScene extends GdSlowConsole implements ModeScene {
                 updateOutputText(outputText, "{GD_ICEBERG}You rolled a " + diceHistory.get(diceHistory.size() - 2) + " and a " + diceHistory.get(diceHistory.size() - 1) + ".\n");
                 outputText.getChildren().set(outputText.getChildren().size()-2, checkmarkA);
 
+                // 1ST TEST -- PRIME DICE ROLL
                 if (!hasPassedInit) {
                     initLosses++;
                     outcomeChances.add(0.111);
@@ -1147,7 +1149,7 @@ public class GdSlowScene extends GdSlowConsole implements ModeScene {
                 } else {
                     outcomeChances.add(0.889);
 
-                    // 2ND TEST
+                    // 2ND TEST -- LUCKY CARD
                     gdFancyDelay(outputText, "\n> Drawing a random card...");
                     boolean hasPassedDouble = rollDoubleRound();
                     pause();
@@ -1163,18 +1165,16 @@ public class GdSlowScene extends GdSlowConsole implements ModeScene {
                         outcomeChances.add(0.557);
                         doubleWins++;
 
-                        // 3RD TEST
-                        if (ynPrompt(balance, bet)) {//prompt(ANSI_YELLOW + "\n◇ You currently qualify for a 2x win " + ANSI_RESET + "(" + monetaryParse(balance, false, false, false) + " -> " + monetaryParse((balance + bet * 2), false, false, false) + ")" + ANSI_YELLOW + ".\nTry for a 4x win by trying to roll a pair " + ANSI_RESET + "(" + monetaryParse(balance, false, false, false) + " -> " + monetaryParse((balance + bet * 4), false, false, false) + ")" + ANSI_YELLOW + "? You will lose ALL profits if you lose." + ANSI_RESET, "Error: invalid choice.", new String[]{"yes", "no", "y", "n"}, false, false)) {
+                        // 3RD TEST -- LUCKY CARD
+                        if (ynPrompt(balance, bet)) {
                                 updateOutputText(outputText, "{GD_GREEN}[!] Accepted 4x offer.\n");
 
                                 gdFancyDelay(outputText, "\n> Rolling two fair dice...");
                                 boolean hasPassedQuad = rollQuadRound();
                                 pause();
                                 updateOutputText(outputText, "{GD_ICEBERG}You rolled a " + optDiceHistory.get(optDiceHistory.size() - 2) + "...\n");
-                                //TimeUnit.MILLISECONDS.sleep(1000);
                                 updateOutputText(outputText, "{GD_ICEBERG}...and a " + optDiceHistory.get(optDiceHistory.size() - 1) + ".\n");
                                 outputText.getChildren().set(outputText.getChildren().size()-3, checkmarkC);
-                                //TimeUnit.MILLISECONDS.sleep(2000);
 
                                 if (!hasPassedQuad) {
                                     outcomeChances.add(0.833);

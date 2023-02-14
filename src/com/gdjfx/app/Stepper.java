@@ -6,16 +6,20 @@ import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+import java.io.File;
 import java.util.List;
 
 import static com.gdjfx.app.CSSManager.*;
-import static com.gdjfx.app.CSSManager.generateColorTransition;
+import static com.gdjfx.app.GdSlowScene.playVolumedAudio;
+import static com.gdjfx.app.GdSlowScene.sfxVolume;
 
+// A custom JavaFX node for more visual, keyboard-friendly digit inputs.
 public class Stepper extends Group implements CustomNode, Focusable {
     private final Rectangle digitBG;
     private final int increment;
@@ -28,18 +32,33 @@ public class Stepper extends Group implements CustomNode, Focusable {
     private int value;
 
     // Internal var -- no need for Builder to build this.
-    static Color[] palette;
+    private Color[] palette;
+    private Timeline[] colorTransitions;
     static Pane root;
-    static Timeline digitBgColorTransition, btnBgColorTransition, btnTextColorTransition, digitColorTransition;
-    static Timeline[] colorTransitions;
     static final Font igiari = Font.loadFont("file:src/com/gdjfx/app/assets/igiari.ttf", 12);
+    static final AudioClip sfxDollop = new AudioClip(new File("src/com/gdjfx/app/assets/audio/sfx/dollop.wav").toURI().toString());
+
+
+    final EventHandler<KeyEvent> stepperInputHandler = ke -> {
+        switch (ke.getCode()) {
+            case UP -> {
+                incrementValue();
+                playVolumedAudio(sfxDollop, sfxVolume); // Garbage fix -- replace later
+            }
+
+            case DOWN -> {
+                decrementValue();
+                playVolumedAudio(sfxDollop, sfxVolume);
+            }
+        }
+    };
 
 
     // ** Effective Java #2: use the "builder pattern" if you have lots of constructor parameters. **
     public static class Builder {
         // Required params
         private final int[] bounds;
-        private Pane root;
+        private final Pane root;
 
         // Optional params - initialized to defaults
         private Rectangle digitBG = new Rectangle(30, 70);
@@ -143,42 +162,68 @@ public class Stepper extends Group implements CustomNode, Focusable {
         digit.setFill(palette[3]);
 
         // Attach color transitions (for use with handleFocus)
-        digitBgColorTransition = generateColorTransition(palette[0], palette[0].deriveColor(1,1,1.3,1), List.of("-fx-fill"), 1, digitBG);
-        btnBgColorTransition = generateColorTransition(palette[1], palette[1].deriveColor(1,1,1.3,1), List.of("-fx-fill"), 1, btnDecr, btnIncr);
-        btnTextColorTransition = generateColorTransition(palette[2], palette[2].deriveColor(1,1,1.3,1), List.of("-fx-text-fill"), 1, btnDecr, btnIncr);
-        digitColorTransition = generateColorTransition(palette[3], palette[3].deriveColor(1,1,1.3,1), List.of("-fx-text-fill"), 1, digit);
+        Timeline digitBgColorTransition = generateColorTransition(palette[0], palette[0].deriveColor(1, 0.7, 1.5, 0.8), List.of("-fx-fill"), 0.4, digitBG);
+        Timeline btnBgColorTransition = generateColorTransition(palette[1], palette[1].deriveColor(1, 0.8, 1.1, 1.2), List.of("-fx-background-color"), 0.4, btnDecr, btnIncr);
+        Timeline btnTextColorTransition = generateColorTransition(palette[2], palette[2].deriveColor(1, 0.9, 1.3, 0.8), List.of("-fx-text-fill"), 0.4, btnDecr, btnIncr);
+        Timeline digitColorTransition = generateColorTransition(palette[3], palette[3].deriveColor(1, 2, 2.5, 1), List.of("-fx-fill"), 0.4, digit);
 
         colorTransitions = new Timeline[]{digitBgColorTransition, btnBgColorTransition, btnTextColorTransition, digitColorTransition};
 
         this.getChildren().addAll(digitBG, digit, btnIncr, btnDecr);
     }
 
+
+    // Returns increment button, intended for applying listeners and the like.
+    // @param N/A
+    // @return increment button
     public Button getIncr() {
         return btnIncr;
     }
 
+    // See getIncr description.
+    // @param N/A
+    // @return decrement button
     public Button getDecr() {
         return btnDecr;
     }
 
+    // Returns the generated color palette for the stepper.
+    // @param N/A
+    // @return color palette
     public Color[] getPalette(){
         return palette;
     }
 
+
+    // Increment the stepper's value, wrapping on bounds if needed.
+    // @param N/A
+    // @return N/A
     public void incrementValue() {
         value = (value + increment > bounds[1]) ? bounds[0] : value + 1;
         digit.setText("" + value);
     }
 
+    // See incrementValue description.
+    // @param N/A
+    // @return N/A
     public void decrementValue() {
         value = (value - increment < bounds[0]) ? bounds[1] : value - 1;
         digit.setText("" + value);
     }
 
+
+    // Returns stepper value.
+    // @param N/A
+    // @return stepper value
     public int getValue() {
         return value;
     }
 
+
+    // Required by CustomNode. Set the layout of the group with its components relatively placed properly.
+    // @param layoutX - x-position of Stepper, oriented around the increment button
+    // @param layoutY - y-position of Stepper
+    // @return N/A
     @Override
     public void setLayout(double layoutX, double layoutY) {
         btnIncr.setLayoutX(layoutX);
@@ -193,11 +238,11 @@ public class Stepper extends Group implements CustomNode, Focusable {
     }
 
 
+    // Required by CustomNode. Generates the palette for the node, which is dynamically set based on a main color.
+    // @param color - main color. For this node it is the color of the slider progress bar.
+    // @return N/A
     @Override
     public void setPalette(Color color) {
-        // Param = main BG color.
-        // Colors to calculate: digit, incr/decr bg, incr/decr text
-        // {mainBg, btnBg, btnText, digit}
         Color mainBgColor = color;
         Color btnBgColor = color.deriveColor(1, 0.85, 1, 1.4);
         Color btnTextColor = color.deriveColor(1,1.2,0.3,1.3);
@@ -206,6 +251,10 @@ public class Stepper extends Group implements CustomNode, Focusable {
         palette = new Color[]{mainBgColor, btnBgColor, btnTextColor, digitTextColor};
     }
 
+
+    // Required by Focusable. Updates the node on Focusable focus, preferably with clear visual distinction.
+    // @param isFocused - is the node Focusable focused (pseudofocused)?
+    // @return N/A
     @Override
     public void handleFocus(boolean isFocused) {
         for (Timeline transition : colorTransitions) {
@@ -219,22 +268,11 @@ public class Stepper extends Group implements CustomNode, Focusable {
             transition.play();
         }
 
-        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
-            public void handle(KeyEvent ke) {
-                if (isFocused) {
-                    switch (ke.getCode()) {
-                        case UP -> {
-                           incrementValue();
-                           System.out.println("FIRED");
-                        }
-
-                        case DOWN -> {
-                           decrementValue();
-                           System.out.println("FIRED");
-                        }
-                    }
-                }
-            }
-        });
+        if (isFocused) {
+            root.addEventFilter(KeyEvent.KEY_PRESSED, stepperInputHandler);
+        }
+        else {
+            root.removeEventFilter(KeyEvent.KEY_PRESSED, stepperInputHandler);
+        }
     }
 }

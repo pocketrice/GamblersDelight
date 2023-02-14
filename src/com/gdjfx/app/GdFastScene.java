@@ -88,18 +88,16 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
 
     // End of credit
 
-
-    private int thousandsValue = 5, hundredsValue = 0, tensValue = 0, onesValue = 0, rerunCount;
-    private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
-    private long balance, netBalance, bet, trialCount;
+    private int rerunCount, currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
+    private long balance, netBalance;
     private double totalWinRate, totalWinLoseRatio, doubleWinRate, quadWinRate, expectedValue;
-    private List<Card> cardHistory = new ArrayList<>();
-    private List<Integer> diceHistory = new ArrayList<>();
-    private List<Integer> optDiceHistory = new ArrayList<>();
+
+    private final List<Card> cardHistory = new ArrayList<>();
+    private final List<Integer> diceHistory = new ArrayList<>();
+    private final List<Integer> optDiceHistory = new ArrayList<>();
 
     public GdFastScene() {
         balance = 100;
-        trialCount = 5000;
     }
 
 
@@ -169,10 +167,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
 
             toggleObfPanel(false);
             Timeline activateKeybindsAnim = new Timeline(
-                    new KeyFrame(Duration.seconds(4), e -> {
-                        isGameStarted = true;
-                        root.requestFocus();
-                    })
+                    new KeyFrame(Duration.seconds(4), e -> isGameStarted = true)
             );
             activateKeybindsAnim.play();
 
@@ -246,7 +241,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
         bgmSlCaption.setStyle("-fx-font-size:14");
         bgmSlCaption.setFill(Color.valueOf("#c2d9d6"));
 
-        FilledSlider bgmSlider = new FilledSlider(Color.web("#709e98"), Color.web("#b4d2c9"));
+        FilledSlider bgmSlider = new FilledSlider(Color.web("#709e98"));
         bgmSlider.slider.setValue((bgmVolume * 100) / 0.15);
         Text bgmSlVolNum = new Text((int) bgmSlider.slider.getValue() + "%");
         bgmSlider.slider.valueProperty().addListener((obs, oldValue, newValue) -> {
@@ -269,7 +264,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
         setLayout(bgmSlVolNum, 400, 188);
 
 
-        FilledSlider sfxSlider = new FilledSlider(Color.web("#76709e"), Color.web("#b7b4d2"));
+        FilledSlider sfxSlider = new FilledSlider(Color.web("#76709e"));
         sfxSlider.slider.setValue((sfxVolume * 100) / 0.8);
         Text sfxSlVolNum = new Text((int) sfxSlider.slider.getValue() + "%");
         sfxSlVolNum.setFont(igiari);
@@ -493,7 +488,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
 
         ynPromptGroup = new Group(btnYes, btnNo);
 
-        Stepper thousandsStepper = new Stepper.Builder(new int[]{0,9}, root).value(5).increment(1).btnIncr("+").btnDecr("-").paletteColor(Color.web("#709e9890")).build();
+        Stepper thousandsStepper = new Stepper.Builder(new int[]{0,9}, root).value(5).increment(1).btnIncr("+").btnDecr("-").paletteColor(Color.web("#9e8fb590")).build();
         Stepper hundredsStepper = new Stepper.Builder(new int[]{0,9}, root).value(0).increment(1).btnIncr("+").btnDecr("-").paletteColor(Color.web("#9e8fb590")).build();
         Stepper tensStepper = new Stepper.Builder(new int[]{0,9}, root).value(0).increment(1).btnIncr("+").btnDecr("-").paletteColor(Color.web("#9e8fb590")).build();
         Stepper onesStepper = new Stepper.Builder(new int[]{0,9}, root).value(0).increment(1).btnIncr("+").btnDecr("-").paletteColor(Color.web("#9e8fb590")).build();
@@ -505,7 +500,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
         onesStepper.setLayout(525, 330);
         setLayout(btnSubmitBet, 590,360);
 
-        trialPromptFocusables.getChildren().stream().map(n -> (Stepper) n).forEach(s -> {
+        trialPromptFocusables.getFocusableList().stream().map(n -> (Stepper) n).forEach(s -> {
             s.getIncr().setOnAction(actionEvent -> {
                 if (isPrompted) {
                     playVolumedAudio(sfxDollop, sfxVolume);
@@ -576,21 +571,8 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
             int ynIndex = 0, digitIndex = 0;
             public void handle(KeyEvent ke) {
                 if (isGameStarted || ke.getCode() == KeyCode.ENTER) {
+                    debugRoot();
                     switch (ke.getCode()) {
-                        /*case UP -> { // todo: increment selected button
-                            if (!isPaused && isPrompted && trialPrompt.isVisible() && !outputScroll.isFocused()) {
-                                btnTensIncr.fire();
-                            }
-                            System.out.println("CURRENT FOCUS: " + scene.focusOwnerProperty().get());
-                        }
-
-                        case DOWN -> { // todo increment sel button
-                            if (!isPaused && isPrompted && trialPrompt.isVisible() && !outputScroll.isFocused()) {
-                                btnTensDecr.fire();
-                            }
-                            System.out.println("CURRENT FOCUS: " + scene.focusOwnerProperty().get());
-                        }*/
-
                         case LEFT -> { // both prompts (move focus leftward)
                             if (isPaused && bgmSlider.slider.isFocused()) {
                                 playVolumedAudio(sfxPeepHigh, bgmVolume);
@@ -606,10 +588,8 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
                             }
 
                             else if (isPrompted && trialPromptGroup.isVisible()) {
-                                digitIndex = (digitIndex-1 < 0) ? 3 : digitIndex-1;
+                                digitIndex = (digitIndex - 1 < 0) ? 3 : digitIndex - 1;
                             }
-
-                            System.out.println("CURRENT FOCUS: " + scene.focusOwnerProperty().get());
                         }
 
                         case RIGHT -> { // both prompts (move focus rightward)
@@ -629,8 +609,6 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
                             else if (isPrompted && trialPromptGroup.isVisible()) {
                                 digitIndex = (digitIndex+1 > 3) ? 0 : digitIndex+1;
                             }
-
-                            System.out.println("CURRENT FOCUS: " + scene.focusOwnerProperty().get());
                         }
 
                         case ESCAPE -> btnPause.fire();
@@ -891,11 +869,13 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
         ynPromptGroup.setVisible(false);
         trialPromptGroup.setVisible(true);
         promptBoxGroup.setLayoutY(50);
-        trialPromptFocusables.requestFocus();
+        trialPromptFocusables.setGroupFocus(true);
         pause();
 
+        trialPromptFocusables.setGroupFocus(false);
         promptBoxGroup.setLayoutY(180);
-        return thousandsValue * 1000L + hundredsValue * 100L + tensValue * 10L + onesValue;
+        Integer[] values = trialPromptFocusables.getFocusableList().stream().map(f -> ((Stepper) f).getValue()).toList().toArray(new Integer[0]);
+        return values[0] * 1000 + values[1] * 100 + values[2] * 10 + values[3];
     }
 
 
@@ -958,7 +938,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
         long initialBal = balance;
         long netBets = 0;
 
-        trialCount = trialPrompt("\n\n\n{GD_BLUE}* How many trials will you run?");
+        long trialCount = trialPrompt("\n\n\n{GD_BLUE}* How many trials will you run?");
         balance -= 10;
         updateOutputText(outputText, "\n\n\nPreliminary cost was pocketed. You now have $" + balance + ".00. ", "{GD_RED}(-$10.00)\n\n");
 
@@ -986,22 +966,23 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
                 long winAmount = 0;
                 currentRound++;
 
-                bet = 10;
+                long bet = 10;
                 balance -= bet;
                 netBets += bet;
 
 
-                while (!hasLostRound && !hasEndedRound) { // WHILE NOT EVALUATING PROPERLY? FIXME
+                while (!hasLostRound && !hasEndedRound) {
+                    // 1ST TEST -- PRIME DICE ROLL
                     if (!rollInitRound()) {
                         initLosses++;
                         hasLostRound = true;
                     } else {
-                        // 2ND TEST
+                        // 2ND TEST -- LUCKY CARD
                         if (!rollDoubleRound()) {
                             doubleLosses++;
                             hasLostRound = true;
                         } else {
-                            // 3RD TEST
+                            // 3RD TEST -- SUPER SNAKE EYES
                             doubleWins++;
                             switch ((int) (Math.random() * 2)) {
                                 case 0 -> {
@@ -1035,7 +1016,7 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
                 netBalance = balance - initialBal;
                 expectedValue = truncate((double) (netBalance - netBets) / currentRound, 2);
 
-                // Takes into account div by zero problem
+                // Evades divide by zero problem via hard-code for "denominator = 0" case.
                 totalWinRate = (currentRound != 0) ? (double) totalWins / currentRound : (double) totalWins;
                 totalWinLoseRatio = (totalLosses != 0) ? (double) totalWins / totalLosses : 0;
                 doubleWinRate = (doubleLosses + doubleWins != 0) ? (double) doubleWins / (doubleWins + doubleLosses) : (double) doubleWins;
@@ -1043,11 +1024,8 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
             }
             long posttime = getMillisecSinceUnixEpoch();
 
-            // ROUND STATISTICS
-            // BALANCE, NET BALANCE
-            // CHANCE OF GIVEN PATH
-            // EXPECTED VALUE (CUMULATIVE)
-            // W/L RATIOS (ALL OF THEM)
+
+
             updateOutputText(outputText, "> Balance: " + gdMonetaryParse(initialBal, false, false, false) + " -> ", "{GD_BLUE}" + gdMonetaryParse(balance, false, false, false) + "\n");
             updateOutputText(outputText, "  Net gain/loss: " + gdMonetaryParse(netBalance, true, true, true) + "\n");
             updateOutputText(outputText, "  Expected value: " + gdMonetaryParse(expectedValue, true, true, true) + "\n");
@@ -1073,6 +1051,14 @@ public class GdFastScene extends GdFastConsole implements ModeScene {
         );
         fxDelayAnim.playFromStart();
         pause();
+    }
+
+    // Locks native JavaFX focus on one particular node. Not finished. For use mainly with FocusableGroup, but all-purpose.
+    // @param isLocked - is focus locked on the current focused node?
+    // @return N/A
+    public void lockFocus(boolean isLocked) {
+        Node[] nodeList = root.getChildrenUnmodifiable().toArray(new Node[0]);
+        // todo: finish
     }
 
 

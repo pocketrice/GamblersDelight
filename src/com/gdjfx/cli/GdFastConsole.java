@@ -11,11 +11,12 @@ import static com.gdjfx.AnsiCode.*;
 
 public class GdFastConsole extends GdSlowConsole implements ModeConsole {
     private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
-    private long balance, netBalance, bet, trialCount;
+    private long balance, netBalance, trialCount;
     private double totalWinRate, totalWinLoseRatio, doubleWinRate, quadWinRate, expectedValue;
-    private List<Card> cardHistory = new ArrayList<>();
-    private List<Integer> diceHistory = new ArrayList<>();
-    private List<Integer> optDiceHistory = new ArrayList<>();
+
+    private final List<Card> cardHistory = new ArrayList<>();
+    private final List<Integer> diceHistory = new ArrayList<>();
+    private final List<Integer> optDiceHistory = new ArrayList<>();
 
     public GdFastConsole() {
         super();
@@ -51,12 +52,12 @@ public class GdFastConsole extends GdSlowConsole implements ModeConsole {
             long winAmount = 0;
             currentRound++;
 
-            bet = 10;
+            long bet = 10;
             balance -= bet;
             netBets += bet;
 
 
-            while (!hasLostRound && !hasEndedRound) { // WHILE NOT EVALUATING PROPERLY? FIXME
+            while (!hasLostRound && !hasEndedRound) {
                 if (!rollInitRound()) {
                     initLosses++;
                     hasLostRound = true;
@@ -104,7 +105,7 @@ public class GdFastConsole extends GdSlowConsole implements ModeConsole {
             netBalance = balance - initialBal;
             expectedValue = truncate((double)(netBalance - netBets) / currentRound, 2);
 
-            // Takes into account div by zero problem??
+            // Evades divide by zero problem via hard-code for "denominator = 0" case.
             totalWinRate = (double)totalWins / trialCount;
             totalWinLoseRatio = (totalLosses != 0) ? (double)totalWins / totalLosses : 0;
             doubleWinRate = (double)doubleWins / trialCount;
@@ -112,11 +113,6 @@ public class GdFastConsole extends GdSlowConsole implements ModeConsole {
         }
         long posttime = getMillisecSinceUnixEpoch();
 
-        // ROUND STATISTICS
-        // BALANCE, NET BALANCE
-        // CHANCE OF GIVEN PATH
-        // EXPECTED VALUE (CUMULATIVE)
-        // W/L RATIOS (ALL OF THEM)
         System.out.println("➢  Balance: " + monetaryParse(initialBal, false, false, false) + " -> " + ANSI_BLUE + monetaryParse(balance, false, false, false) + ANSI_RESET);
         System.out.println("   Net gain/loss: " + monetaryParse(netBalance, true, true, true));
         System.out.println("   Expected value: " + monetaryParse(expectedValue, true, true, true));

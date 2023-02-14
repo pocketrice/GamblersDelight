@@ -4,17 +4,10 @@ package com.gdjfx.cli;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-
-public class ProgramConsole { // console-based GDJFX.
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
+import static com.gdjfx.AnsiCode.*;
 
 
+public class ProgramConsole { // Console-based GDJFX.
     public static void main(String[] args) throws InterruptedException, FileNotFoundException {
         System.out.println(ANSI_BLUE + "Welcome to Gambler's Delight. To get started, pick an option by inputting its keyword." + ANSI_RESET);
         System.out.println(ANSI_CYAN + "You may...");

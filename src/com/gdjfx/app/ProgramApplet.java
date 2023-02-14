@@ -4,18 +4,18 @@ package com.gdjfx.app;
 
 import eu.iamgio.animated.Animated;
 import eu.iamgio.animated.property.PropertyWrapper;
-import javafx.animation.*;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.ConditionalFeature;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.media.AudioClip;
@@ -26,8 +26,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.scene.control.Button;
-import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
 import java.io.File;
@@ -36,9 +34,12 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gdjfx.app.GdSlowScene.*;
+import static com.gdjfx.AnsiCode.ANSI_PURPLE;
+import static com.gdjfx.AnsiCode.ANSI_RESET;
+import static com.gdjfx.app.GdSlowScene.playVolumedAudio;
+import static com.gdjfx.app.GdSlowScene.sfxVolume;
 
-public class ProgramApplet extends Application { // javafx app gdjfx.
+public class ProgramApplet extends Application {
     static Stage stage;
     static Pane root;
     static Scene scene;
@@ -84,12 +85,7 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         stage.setResizable(false);
         stage.show();
 
-        stage.setOnCloseRequest(new EventHandler<>() {
-            @Override
-            public void handle(WindowEvent event) {
-                stop();
-            }
-        });
+        stage.setOnCloseRequest(event -> stop());
     }
 
     // Initialize the root pane for the default/title screen.
@@ -168,32 +164,30 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
 
         scene = new Scene(root, 1024, 768);
         scene.getStylesheets().add("com/gdjfx/app/main.css");
-        root.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
-            public void handle(KeyEvent ke) {
-                switch (ke.getCode()) {
-                    case UP -> {
-                        playVolumedAudio(sfxSelectShort, sfxVolume);
-                        activeBtnIndex = (activeBtnIndex + 1 > 1) ? 0 : activeBtnIndex + 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
-                        updateSelections();
-                    }
+        root.addEventFilter(KeyEvent.KEY_PRESSED, ke -> {
+            switch (ke.getCode()) {
+                case UP -> {
+                    playVolumedAudio(sfxSelectShort, sfxVolume);
+                    activeBtnIndex = (activeBtnIndex + 1 > 1) ? 0 : activeBtnIndex + 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
+                    updateSelections();
+                }
 
-                    case DOWN -> {
-                        playVolumedAudio(sfxSelectShort, sfxVolume);
-                        activeBtnIndex = (activeBtnIndex - 1 < 0) ? 1 : activeBtnIndex - 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
-                        updateSelections();
-                    }
+                case DOWN -> {
+                    playVolumedAudio(sfxSelectShort, sfxVolume);
+                    activeBtnIndex = (activeBtnIndex - 1 < 0) ? 1 : activeBtnIndex - 1; // todo: replace "1" in ternary with root.buttonCount or smth like that
+                    updateSelections();
+                }
 
-                    case ESCAPE, Z -> {
-                        activeBtnIndex = -1;
-                        updateSelections();
-                    }
+                case ESCAPE, Z -> {
+                    activeBtnIndex = -1;
+                    updateSelections();
+                }
 
-                    case X, ENTER -> {
-                        if (activeBtnIndex == 0) {
-                            btnSlowMode.fire();
-                        } else if (activeBtnIndex == 1) {
-                            btnFastMode.fire();
-                        }
+                case X, ENTER -> {
+                    if (activeBtnIndex == 0) {
+                        btnSlowMode.fire();
+                    } else if (activeBtnIndex == 1) {
+                        btnFastMode.fire();
                     }
                 }
             }
@@ -334,11 +328,16 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
     }
 
 
+    // Resets menu root marquee text to attempt to fix a bug where the marquee animator is created several times over and breaks the animation. Currently not entirely fixed.
+    // @param N/A
+    // @return N/A
     public static void resetMarquee() {
         marqueeAnimator.setActive(false);
         marqueeText.setLayoutX(800);
         isMarqueeActive = false;
     }
+
+
     // Updates UI according to which mode button is selected (not active). This includes the marquee, image display, and button colors. Possible to drastically cut down on # of parameters.
     // @param btn1 - slow mode button
     // @param btn2 - fast mode button
@@ -400,8 +399,25 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
     // Changes the root (pane) of the applet.
     // @param pane - pane to be switched to
     // @return N/A
-    public static void changeRoot(Parent pane) {
-        stage.getScene().setRoot(pane);
+    public static void changeRoot(Pane root) {
+        stage.getScene().setRoot(root);
+    }
+
+
+    // Display various information about the current root.
+    // @param N/A
+    // @return N/A
+    public static void debugRoot() {
+        Pane root = (Pane) stage.getScene().getRoot();
+        System.out.println(ANSI_PURPLE + "Root Debug Report");
+        System.out.println("=======================================================================\n");
+        System.out.println("Root: " + root.toString());
+        System.out.println("Nodes (front -> back z-index): " + root.getChildren().toString());
+        System.out.println("Current focus: " + scene.focusOwnerProperty().get());
+        System.out.println("\n=======================================================================\n\n\n\n" + ANSI_RESET);
+
+        // Singleton magic?
+        //int selectedNode = (int) prompt("To view individual node info, type said node's index below.", "Error: invalid index. Current root holds node indices 0-" + (root.getChildren().size()-1) + ".", 0, root.getChildren().size()-1, true);
     }
 
 
@@ -412,10 +428,16 @@ public class ProgramApplet extends Application { // javafx app gdjfx.
         return new Background(new BackgroundFill(color, CornerRadii.EMPTY, Insets.EMPTY));
     }
 
-    public static MediaPlayer buildAudio(Media audio, double volume, int cycleType) {
+
+    // Build a media player with specified attributes. This is due to the way MediaPlayers work in JavaFX; they are rather immutable.
+    // @param audio - audio file to attach
+    // @param volume - normalized (0-1) volume value
+    // @param cycleCount
+    // @return built media player
+    public static MediaPlayer buildAudio(Media audio, double volume, int cycleCount) {
         MediaPlayer audioPlayer = new MediaPlayer(audio);
         audioPlayer.setVolume(volume);
-        audioPlayer.setCycleCount(cycleType);
+        audioPlayer.setCycleCount(cycleCount);
 
         return audioPlayer;
     }

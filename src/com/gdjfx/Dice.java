@@ -6,9 +6,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
 
-public class Dice { // todo: might need to store position of dice (rotation, location, etc.); store here or in the actual "environment"?
+public class Dice {
     public int sideCount;
-    public int selectedValue; // Num of sides to dice (for use in rolling / 3d model generator) // calculated value of dice roll
+    public int selectedValue; // Calculated value of dice roll
     int[] sideValues; // Values for each side. Array length must equal sideCount (asserted)
 
     public Dice() { // Default constr.; creates a regular dice.
@@ -18,7 +18,7 @@ public class Dice { // todo: might need to store position of dice (rotation, loc
     }
 
     public Dice(int[] sv) {
-        assert (Arrays.stream(sv).min().getAsInt() > 0) : "Error: Dice object of name " + this + " has invalid side values; the found minimum of " + Arrays.stream(sv).min() + " is less than 0";
+        assert (Arrays.stream(sv).min().getAsInt() > 0) : "Error: Dice object of name " + this + " has invalid side values; the found minimum of " + Arrays.stream(sv).min() + " is less than 0.";
         sideValues = sv;
         sideCount = sv.length;
         selectedValue = -1; // 2nd assertion guarantees no negatives; this allows for safely checking if selectedValue was not set yet.

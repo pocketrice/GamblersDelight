@@ -21,7 +21,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="kordamp.ikonli.javafx" level="project" />
-    <orderEntry type="library" name="kordamp.ikonli.materialdesign.pack" level="project" />
     <orderEntry type="library" name="kordamp.ikonli.materialdesign2.pack" level="project" />
     <orderEntry type="library" name="fr.brouillard.oss.cssfx" level="project" />
   </component>

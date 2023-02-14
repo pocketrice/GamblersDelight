@@ -5,10 +5,12 @@ import javafx.scene.control.Slider;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import static com.gdjfx.app.CSSManager.*;
 import static com.gdjfx.app.ProgramApplet.scene;
-import static com.gdjfx.app.CSSManager.stringifyOpaqueColor;
 
-public class FilledSlider extends Group implements CustomNode, Focusable {
+// A JavaFX custom node that is like the native Slider, but sleeker, more dynamic, and ACTUALLY not ugly.
+// This exists because JavaFX for some reason doesn't fill positive values on the slider. Sigh.
+public class FilledSlider extends Group implements CustomNode {
     Slider slider = new Slider();
     Rectangle sliderProgress = new Rectangle();
     Rectangle sliderProgressBorder = new Rectangle();
@@ -16,60 +18,24 @@ public class FilledSlider extends Group implements CustomNode, Focusable {
 
 
     public FilledSlider() {
-        scene.getStylesheets().add("com/gdjfx/app/main.css");
-        slider.setId("filled-slider"); // ** Requires #color-slider .track { -fx-background-color: transparent; } in main.css
-        sliderProgress.heightProperty().bind(slider.heightProperty().subtract(8));
-        sliderProgress.widthProperty().bind(slider.widthProperty());
-        sliderProgress.setFill(Color.web("#969696"));
-
-        // Dynamic slider thumb focus/faint focus colors (#filled-slider .thumb) - credit to https://stackoverflow.com/questions/50552728/dynamically-change-javafx-css-property
-        slider.setStyle("-dynamic-focus-color: derive(#969696, -40%)");
-        slider.setStyle("-dynamic-faint-focus-color: derive(#969696A0, -40%)");
-
-        sliderProgressBorder.heightProperty().bind(slider.heightProperty().subtract(5));
-        sliderProgressBorder.widthProperty().bind(slider.widthProperty().add(3));
-        sliderProgressBorder.setFill(Color.web("#969696").deriveColor(1, 1, -40, 1));
-
-        sliderProgress.setArcHeight(15);
-        sliderProgress.setArcWidth(10);
-        sliderProgressBorder.setArcHeight(15);
-        sliderProgressBorder.setArcWidth(10);
-
-
-        // Update progress/progress border based on default volume value.
-        sliderProgress.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, #2D819D %d%%, #969696 %d%%);",
-                (int) slider.getValue(), (int) slider.getValue()));
-
-        sliderProgressBorder.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, derive(#2D819D, -40%%) %d%%, derive(#969696, -40%%) %d%%);",
-                (int) slider.getValue(), (int) slider.getValue()));
-
-        // Update progress/progress border on change.
-        slider.valueProperty().addListener((observableValue, oldVal, newVal) -> {
-            sliderProgress.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, #2D819D %d%%, #969696 %d%%);",
-                    newVal.intValue(), newVal.intValue()));
-
-            sliderProgressBorder.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, derive(#2D819D, -40%%) %d%%, derive(#969696, -40%%) %d%%);",
-                    newVal.intValue(), newVal.intValue()));
-        });
-
-        this.getChildren().addAll(sliderProgressBorder, sliderProgress, slider);
+        this(Color.web("#969696"));
     }
 
-
-    public FilledSlider(Color filledColor, Color unfilledColor)  {
+    public FilledSlider(Color filledColor)  {
         scene.getStylesheets().add("com/gdjfx/app/main.css");
+        setPalette(filledColor);
+
         slider.setId("filled-slider"); // ** Requires #color-slider .track { -fx-background-color: transparent; } in main.css
         sliderProgress.heightProperty().bind(slider.heightProperty().subtract(8));
         sliderProgress.widthProperty().bind(slider.widthProperty());
         sliderProgress.setFill(filledColor);
 
-        // Dynamic slider thumb focus/faint focus colors (#filled-slider .thumb)
-        slider.setStyle("-dynamic-focus-color: derive(" + stringifyOpaqueColor(filledColor) + ", -40%)");
-        slider.setStyle("-dynamic-faint-focus-color: derive(" + stringifyOpaqueColor(filledColor) + "A0, -40%)");
+        // Dynamic slider thumb faint focus color (#filled-slider .thumb)
+        addStyle(slider, "-dynamic-faint-focus-color: " +  stringifyOpaqueColor(palette[4]) + "A0");
 
         sliderProgressBorder.heightProperty().bind(slider.heightProperty().subtract(5));
         sliderProgressBorder.widthProperty().bind(slider.widthProperty().add(3));
-        sliderProgressBorder.setFill(filledColor.deriveColor(1, 1, -40, 1));
+        sliderProgressBorder.setFill(palette[2]);
 
         sliderProgress.setArcHeight(15);
         sliderProgress.setArcWidth(10);
@@ -78,24 +44,28 @@ public class FilledSlider extends Group implements CustomNode, Focusable {
 
 
         // Update progress/progress border based on default volume value.
-        sliderProgress.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(filledColor) + " %d%%, " + stringifyOpaqueColor(unfilledColor) + " %d%%);", // Remove "0x" from start of Color string.
+        addStyle(sliderProgress, String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(palette[0]) + " %d%%, " + stringifyOpaqueColor(palette[1]) + " %d%%);",
                 (int) slider.getValue(), (int) slider.getValue()));
 
-        sliderProgressBorder.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, derive(" + stringifyOpaqueColor(filledColor) + ", -40%%) %d%%, derive(" + stringifyOpaqueColor(unfilledColor) + ", -40%%) %d%%);", // Remove "0x" from start of Color string.
+        addStyle(sliderProgressBorder, String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(palette[2]) + " %d%%, " + stringifyOpaqueColor(palette[3]) + " %d%%);",
                 (int) slider.getValue(), (int) slider.getValue()));
 
         // Update progress/progress border on change.
         slider.valueProperty().addListener((observableValue, oldVal, newVal) -> {
-            sliderProgress.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, " + stringifyOpaqueColor(filledColor) + " %d%%, " + stringifyOpaqueColor(unfilledColor) + " %d%%);", // Remove "0x" from start of Color string.
-                    newVal.intValue(), newVal.intValue()));
+            tweakStyle(sliderProgress, "-fx-fill", String.format("linear-gradient(to right, " + stringifyOpaqueColor(palette[0]) + " %d%%, " + stringifyOpaqueColor(palette[1]) + " %d%%);",
+                    (int) slider.getValue(), (int) slider.getValue()));
 
-            sliderProgressBorder.setStyle(java.lang.String.format("-fx-fill: linear-gradient(to right, derive(" + stringifyOpaqueColor(filledColor) + ", -40%%) %d%%, derive(" + stringifyOpaqueColor(unfilledColor) + ", -40%%) %d%%);", // Remove "0x" from start of Color string.
-                    newVal.intValue(), newVal.intValue()));
+            tweakStyle(sliderProgressBorder, "-fx-fill", String.format("linear-gradient(to right, " + stringifyOpaqueColor(palette[2]) + " %d%%, " + stringifyOpaqueColor(palette[3]) + " %d%%);",
+                    (int) slider.getValue(), (int) slider.getValue()));
         });
 
         this.getChildren().addAll(sliderProgressBorder, sliderProgress, slider);
     }
 
+    // Required by CustomNode. Set the layout of the Group with its components relatively placed properly.
+    // @param layoutX - x-position of FilledSlider, oriented around the Slider component itself
+    // @param layoutY - y-position of FilledSlider
+    // @return N/A
     @Override
     public void setLayout(double layoutX, double layoutY) { // Call this in place of the general setLayout method.
         slider.setLayoutX(layoutX);
@@ -106,19 +76,18 @@ public class FilledSlider extends Group implements CustomNode, Focusable {
         sliderProgressBorder.setLayoutY(layoutY + 2.2);
     }
 
+
+    // Required by CustomNode. Generates the palette for the node, which is dynamically set based on a main color.
+    // @param color - main color. For this node it is the color of the slider progress bar.
+    // @return N/A
     @Override
     public void setPalette(Color color) {
-        // Implement later. Currently not used for FilledSlider; I expect it to be used for background colors.
+        Color filledBgColor = color;
+        Color unfilledBgColor = color.deriveColor(1,0.3, 1.3, 1);
+        Color filledBorderColor = filledBgColor.deriveColor(1,1,0.6,1);
+        Color unfilledBorderColor = unfilledBgColor.deriveColor(1,1,0.6,1);
+        Color thumbFocusColor = color.deriveColor(1,0.8,0.7,1);
+
+        palette = new Color[]{filledBgColor, unfilledBgColor, filledBorderColor, unfilledBorderColor, thumbFocusColor};
     }
-
-    @Override
-    public void handleFocus(boolean isFocused) {
-        if (isFocused) {
-
-        }
-        else {
-
-        }
-    }
-
 }

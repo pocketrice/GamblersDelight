@@ -22,10 +22,10 @@ public class GdSlowConsole implements ModeConsole {
     private final int TOTAL_ROUNDS = 10;
     private int currentRound, totalWins, totalLosses, doubleWins, quadWins, initLosses, doubleLosses, quadLosses;
     private long balance, netBalance, bet;
-    private double totalWinRate, doubleWinRate, quadWinRate, totalWinLoseRatio, expectedValue;
-    private List<Card> cardHistory = new ArrayList<>();
-    private List<Integer> diceHistory = new ArrayList<>();
-    private List<Integer> optDiceHistory = new ArrayList<>();
+
+    private final List<Card> cardHistory = new ArrayList<>();
+    private final List<Integer> diceHistory = new ArrayList<>();
+    private final List<Integer> optDiceHistory = new ArrayList<>();
 
     public GdSlowConsole() {
         currentRound = 0;
@@ -68,7 +68,8 @@ public class GdSlowConsole implements ModeConsole {
             System.out.println("Your bet has been withdrawn. You now have $" + balance + ".00. " + ANSI_RED + "(-$" + bet + ".00)");
 
 
-            while (!hasLostRound && !hasEndedRound) { // WHILE NOT EVALUATING PROPERLY?
+            while (!hasLostRound && !hasEndedRound) {
+                // 1ST TEST -- PRIME DICE ROLL
                 fancyDelay(500, ANSI_CYAN + "\n➢ Rolling two fair dice..." + ANSI_RESET, "\b ✓", 3);
                 boolean hasPassedInit = rollInitRound();
                 System.out.println("You rolled a " + diceHistory.get(diceHistory.size() - 2) + " and a " + diceHistory.get(diceHistory.size() - 1) + ".");
@@ -82,7 +83,7 @@ public class GdSlowConsole implements ModeConsole {
                 else {
                     outcomeChances.add(0.889);
 
-                    // 2ND TEST
+                    // 2ND TEST -- LUCKY CARD
                     fancyDelay(400, ANSI_CYAN + "\n➢ Drawing a random card..." + ANSI_RESET, "\b ✓", 3);
                     boolean hasPassedDouble = rollDoubleRound();
                     System.out.println("You drew a " + toCamelCase(cardHistory.get(cardHistory.size() - 1).cardRank.toString(), true) + " of " + toCamelCase(cardHistory.get(cardHistory.size() - 1).cardSuit.toString(), true) + "s.");
@@ -97,7 +98,7 @@ public class GdSlowConsole implements ModeConsole {
                         outcomeChances.add(0.557);
                         doubleWins++;
 
-                        // 3RD TEST
+                        // 3RD TEST -- SUPER SNAKE EYES
                         switch (prompt(ANSI_YELLOW + "\n◇ You currently qualify for a 2x win " + ANSI_RESET + "(" + monetaryParse(balance, false, false, false) + " -> " + monetaryParse((balance + bet * 2), false, false, false) + ")" + ANSI_YELLOW + ".\nTry for a 4x win by trying to roll a pair " + ANSI_RESET + "(" + monetaryParse(balance, false, false, false) + " -> " + monetaryParse((balance + bet * 4), false, false, false) + ")" + ANSI_YELLOW + "? You will lose ALL profits if you lose." + ANSI_RESET, "Error: invalid choice.", new String[]{"yes", "no", "y", "n"}, false, false)) {
                             case "yes", "y" -> {
                                 System.out.println(ANSI_GREEN + "[✔] Accepted 4x offer." + ANSI_RESET);
@@ -125,7 +126,6 @@ public class GdSlowConsole implements ModeConsole {
                             case "no", "n" -> {
                                 System.out.println(ANSI_RED + "[✘] Declined 4x offer." + ANSI_RESET);
                                 winAmount += bet * 2;
-                                hasEndedRound = true;
                             }
                         }
                     }
@@ -147,19 +147,15 @@ public class GdSlowConsole implements ModeConsole {
 
             balance += winAmount;
             netBalance = balance - initialBal;
-            expectedValue = truncate((double)(netBalance - netBets) / currentRound, 2);
+            double expectedValue = truncate((double) (netBalance - netBets) / currentRound, 2);
 
-            // Takes into account div by zero problem
-            totalWinRate = (totalLosses != 0) ? (double)totalWins / currentRound : (double)totalWins;
-            totalWinLoseRatio = (totalLosses != 0) ? (double)totalWins / totalLosses : 0;
-            doubleWinRate = (doubleLosses != 0) ? (double)doubleWins / currentRound : (double)doubleWins;
-            quadWinRate = (quadLosses != 0) ? (double)quadWins / currentRound : (double)quadWins;
+            // Evades divide by zero problem via hard-code for "denominator = 0" case.
+            double totalWinRate = (totalLosses != 0) ? (double) totalWins / currentRound : (double) totalWins;
+            double totalWinLoseRatio = (totalLosses != 0) ? (double) totalWins / totalLosses : 0;
+            double doubleWinRate = (doubleLosses != 0) ? (double) doubleWins / currentRound : (double) doubleWins;
+            double quadWinRate = (quadLosses != 0) ? (double) quadWins / currentRound : (double) quadWins;
 
-            // ROUND STATISTICS
-            // BALANCE, NET BALANCE
-            // CHANCE OF GIVEN PATH
-            // EXPECTED VALUE (CUMULATIVE)
-            // W/L RATIOS (ALL OF THEM)
+
             System.out.println("➢ Balance: " + monetaryParse((balance + bet - winAmount), false, false, false) +  " -> " + ANSI_BLUE + monetaryParse(balance, false, false, false) + ANSI_RESET);
             System.out.println("  Net gain/loss (cumulative): " + monetaryParse(netBalance, true, true, true));
             System.out.println("  Expected value (cumulative): " + monetaryParse(expectedValue, true, true, true));
@@ -318,7 +314,6 @@ public class GdSlowConsole implements ModeConsole {
     // @param includeColor - should a corresponding ansi color be attached to the string?
     // @return monetary-parsed string
     public static String monetaryParse(double num, boolean includeDecimal, boolean includeExplicitSign, boolean includeColor) { // BUG: for some reason this doesn't work 100% (see 'expected value' on occassions)
-        // TODO: refactor to be more readable / concise (StringBuilder?)
         AnsiCode[] monetaryColors = (includeColor) ? new AnsiCode[]{ANSI_GREEN, ANSI_BLUE, ANSI_RED} : new AnsiCode[]{ANSI_BLACK, ANSI_BLACK, ANSI_BLACK};
 
         String properTruncString;

@@ -51,7 +51,7 @@ public class Card {
 
     public Suit cardSuit;
     int cardValue;
-    public Rank cardRank; // Use cardvalue to calculate this
+    public Rank cardRank;
 
     public Card() { // "Get a random card" -- to actually make sure they match the confines of a real deck, use the "drawCard" method in cardDeck
         cardSuit = weightedRandom(Suit.values(), new double[4], true);

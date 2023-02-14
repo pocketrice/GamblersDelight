@@ -1,6 +1,8 @@
 package com.gdjfx;
 
+// Ansi codes are escape codes that can be appended to strings to apply colors to any console prints.
 public enum AnsiCode {
+    // Effective Java #35: instance fields should replace any use of ordinal().
     ANSI_BLACK(0, "\u001B[30m"),
     ANSI_RED(1, "\u001B[31m"),
     ANSI_GREEN(2, "\u001B[32m"),
@@ -23,6 +25,7 @@ public enum AnsiCode {
         return value;
     }
 
+    // Allows for using AnsiCodes just as they were used when they were declared as static constants within the Class; allows for compat with previous projects (only need to import AnsiCode statically).
     @Override
     public String toString() {
         return code;
