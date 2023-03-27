@@ -1,5 +1,5 @@
 # Credits
-Thanks to these fine folks for providing the resources used in this game.
+Thanks to these fine folks for providing the java.gdjfx.resources used in this game.
 
 <h3>Programming</h3>
 - Pause JavaFX execution for user input _(fabian @ StackOverflow)_ -- <a href="https://stackoverflow.com/questions/46369046/how-to-wait-for-user-input-on-javafx-application-thread-without-using-showandwai">https://stackoverflow.com/questions/46369046/how-to-wait-for-user-input-on-javafx-application-thread-without-using-showandwai </a>
