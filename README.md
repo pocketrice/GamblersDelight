@@ -16,10 +16,7 @@
 <p align="center">
   <br>
 Gambling probability simulator for standard 52-card deck and dice designed for an AP CSA client project. Runs on JavaFX in console-based or GUI-based variants. Depending on trial size, slow (<10) and fast (>1000) modes are available tailored for visuals or speed respectively. Built-in game mechanics included (e.g. betting feature, risking another roll for 2x and 4x payout).
-  
-  <br><br> 
-  > [!caution]
-> This project is not optimised and currently is broken (working on custom animation implementation). Ignore current commits, though releases are OK. JavaFX is a very finicky lil bugger.
+
 
 https://github.com/PocketRice/GamblersDelight/assets/79682953/cf39a8ca-af06-4f17-8a67-6494083d0385
 
